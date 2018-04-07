@@ -771,8 +771,8 @@ DS_Protocol DS_GetProtocolFRC_2015 (void)
     protocol.netconsole_socket.disabled = 0;
     protocol.netconsole_socket.broadcast = 1;
     protocol.netconsole_socket.in_port = 6666;
-    protocol.netconsole_socket.out_port = 6668;
-    protocol.netconsole_socket.type = DS_SOCKET_UDP;
+    protocol.netconsole_socket.out_port = 1740;
+    protocol.netconsole_socket.type = DS_SOCKET_TCP;
 
     /* Return the protocol */
     return protocol;
