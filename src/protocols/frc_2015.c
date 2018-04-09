@@ -824,8 +824,7 @@ DS_Protocol DS_GetProtocolFRC_2015 (void)
     /* Define NetConsole socket properties */
     protocol.netcs_socket = *DS_SocketEmpty();
     protocol.netcs_socket.disabled = 0;
-    protocol.netcs_socket.broadcast = 1;
-    protocol.netcs_socket.in_port = 6666;
+    protocol.netcs_socket.in_port = 1700;
     protocol.netcs_socket.out_port = 1740;
     protocol.netcs_socket.type = DS_SOCKET_TCP;
 
