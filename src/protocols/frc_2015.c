@@ -76,6 +76,7 @@ static const uint8_t cRobotHasCode       = 0x20;
 static unsigned int send_time_data = 0;
 static unsigned int sent_fms_packets = 0;
 static unsigned int sent_robot_packets = 0;
+static unsigned int sent_netcs_packets = 0;
 
 /*
  * Control code flags
@@ -562,6 +563,20 @@ static DS_String create_robot_packet (void)
 }
 
 /**
+ * Generates a packet that the DS will send to the NetConsole, it contains the
+ * following information:
+ */
+static DS_String create_netcs_packet (void)
+{
+    DS_String data = DS_StrNewLen (0);
+
+    /* Increase NetConsole packet counter */
+    ++sent_netcs_packets;
+
+    return data;
+}
+
+/**
  * Interprets the packet and follows the instructions sent by the FMS.
  * Possible instructions are:
  *   - Change robot control mode
@@ -655,6 +670,23 @@ static int read_robot_packet (const DS_String* data)
         read_extended (data, 8);
 
     /* Packet read, feed the watchdog some meat */
+    return 1;
+}
+
+/**
+ * Interprets the packet and obtains the following information:
+ *    - The message
+ */
+static int read_netcs_packet (const DS_String* data)
+{
+    /* Data pointer is invalid */
+    if (!data)
+        return 0;
+
+    /* Packet is too small */
+    if (DS_StrLen (data) < 1)
+        return 0;
+
     return 1;
 }
 
@@ -766,13 +798,13 @@ DS_Protocol DS_GetProtocolFRC_2015 (void)
     protocol.robot_socket.out_port = 1110;
     protocol.robot_socket.type = DS_SOCKET_UDP;
 
-    /* Define netconsole socket properties */
-    protocol.netconsole_socket = *DS_SocketEmpty();
-    protocol.netconsole_socket.disabled = 0;
-    protocol.netconsole_socket.broadcast = 1;
-    protocol.netconsole_socket.in_port = 6666;
-    protocol.netconsole_socket.out_port = 1740;
-    protocol.netconsole_socket.type = DS_SOCKET_TCP;
+    /* Define NetConsole socket properties */
+    protocol.netcs_socket = *DS_SocketEmpty();
+    protocol.netcs_socket.disabled = 0;
+    protocol.netcs_socket.broadcast = 1;
+    protocol.netcs_socket.in_port = 6666;
+    protocol.netcs_socket.out_port = 1740;
+    protocol.netcs_socket.type = DS_SOCKET_TCP;
 
     /* Return the protocol */
     return protocol;
