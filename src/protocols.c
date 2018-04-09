@@ -89,19 +89,23 @@ static DS_String netcs_data;
 static int sent_fms_packets = 0;
 static int sent_radio_packets = 0;
 static int sent_robot_packets = 0;
-static int received_fms_packets = 0;
-static int received_radio_packets = 0;
-static int received_robot_packets = 0;
+static int sent_netcs_packets = 0;
+static int recv_fms_packets = 0;
+static int recv_radio_packets = 0;
+static int recv_robot_packets = 0;
+static int recv_netcs_packets = 0;
 
 /*
  * Sent/received bytes
  */
 static unsigned long sent_fms_bytes = 0;
-static unsigned long recv_fms_bytes = 0;
 static unsigned long sent_radio_bytes = 0;
-static unsigned long recv_radio_bytes = 0;
 static unsigned long sent_robot_bytes = 0;
+static unsigned long sent_netcs_bytes = 0;
+static unsigned long recv_fms_bytes = 0;
+static unsigned long recv_radio_bytes = 0;
 static unsigned long recv_robot_bytes = 0;
+static unsigned long recv_netcs_bytes = 0;
 
 /*
  * The thread ID for the protocol event loop
@@ -109,7 +113,7 @@ static unsigned long recv_robot_bytes = 0;
 static pthread_t event_thread;
 
 /**
- * Sends a new packet to the FMS, the generated data is immediatly deleted
+ * Sends a new packet to the FMS, the generated data is immediately deleted
  * once the packet has been sent
  */
 static void send_fms_data()
@@ -123,7 +127,7 @@ static void send_fms_data()
 }
 
 /**
- * Sends a new packet to the radio, the generated data is immediatly deleted
+ * Sends a new packet to the radio, the generated data is immediately deleted
  * once the packet has been sent
  */
 static void send_radio_data()
@@ -137,7 +141,7 @@ static void send_radio_data()
 }
 
 /**
- * Sends a new packet to the robot, the generated data is immediatly deleted
+ * Sends a new packet to the robot, the generated data is immediately deleted
  * once the packet has been sent
  */
 static void send_robot_data()
@@ -146,6 +150,20 @@ static void send_robot_data()
         ++sent_robot_packets;
         DS_String data = protocol.create_robot_packet();
         sent_robot_bytes += DS_Max (DS_SocketSend (&protocol.robot_socket, &data), 0);
+        DS_StrRmBuf (&data);
+    }
+}
+
+/**
+ * Sends a new packet to the NetConsole, the generated data is immediately deleted
+ * once the packet has been sent
+ */
+static void send_netcs_data()
+{
+    if (enable_operations) {
+        ++sent_netcs_packets;
+        DS_String data = protocol.create_netcs_packet();
+        sent_netcs_bytes += DS_Max (DS_SocketSend (&protocol.netcs_socket, &data), 0);
         DS_StrRmBuf (&data);
     }
 }
@@ -177,6 +195,11 @@ static void send_data()
         send_robot_data();
         DS_TimerReset (&robot_send_timer);
     }
+
+    /* Send NetConsole packet */
+    if (false) { // TODO Implement NetConsole sending
+        send_netcs_data();
+    }
 }
 
 /**
@@ -207,12 +230,13 @@ static void recv_data()
     fms_data = DS_SocketRead (&protocol.fms_socket);
     radio_data = DS_SocketRead (&protocol.radio_socket);
     robot_data = DS_SocketRead (&protocol.robot_socket);
-    netcs_data = DS_SocketRead (&protocol.netconsole_socket);
+    netcs_data = DS_SocketRead (&protocol.netcs_socket);
 
     /* Update received data indicators */
     recv_fms_bytes += DS_StrLen (&fms_data);
     recv_radio_bytes += DS_StrLen (&radio_data);
     recv_robot_bytes += DS_StrLen (&robot_data);
+    recv_netcs_bytes += DS_StrLen (&netcs_data);
 
     /* Read FMS packet */
     if (DS_StrLen (&fms_data) > 0) {
@@ -236,8 +260,11 @@ static void recv_data()
     }
 
     /* Add NetConsole message to event system */
-    if (netcs_data.len > 0)
-        CFG_AddNetConsoleMessage (&netcs_data);
+    if (DS_StrLen (&netcs_data) > 0) {
+        ++received_netcs_packets;
+        netcs_read = protocol.read_netcs_packet (&netcs_data);
+        CFG_AddNetConsoleMessage (netcs_read);
+    }
 
     /* Reset the data pointers */
     clear_recv_data();
@@ -369,20 +396,23 @@ static void close_protocol()
     DS_SocketClose (&protocol.fms_socket);
     DS_SocketClose (&protocol.radio_socket);
     DS_SocketClose (&protocol.robot_socket);
-    DS_SocketClose (&protocol.netconsole_socket);
+    DS_SocketClose (&protocol.netcs_socket);
 
     /* Reset sent/recv bytes */
     sent_fms_bytes = 0;
-    recv_fms_bytes = 0;
     sent_radio_bytes = 0;
-    recv_radio_bytes = 0;
     sent_robot_bytes = 0;
+    sent_netcs_bytes = 0;
+    recv_fms_bytes = 0;
+    recv_radio_bytes = 0;
     recv_robot_bytes = 0;
+    recv_netcs_bytes = 0;
 
     /* Reset sent/recv packets */
     DS_ResetFMSPackets();
     DS_ResetRadioPackets();
     DS_ResetRobotPackets();
+    DS_ResetNetConsolePackets();
 
     /* Create notification string */
     char* name = DS_StrToChar (&protocol.name);
@@ -425,7 +455,7 @@ void DS_ConfigureProtocol (const DS_Protocol* ptr)
     DS_SocketOpen (&protocol.fms_socket);
     DS_SocketOpen (&protocol.radio_socket);
     DS_SocketOpen (&protocol.robot_socket);
-    DS_SocketOpen (&protocol.netconsole_socket);
+    DS_SocketOpen (&protocol.netcs_socket);
 
     /* Update sender timers */
     fms_send_timer.time = protocol.fms_interval;
@@ -493,6 +523,18 @@ unsigned long DS_SentRobotBytes()
 }
 
 /**
+ * Returns the number of sent NetConsole bytes since the current
+ * protocol was loaded.
+ *
+ * This value is only reset to 0 when the current protocol
+ * is closed (e.g while loading another protocol).
+ */
+unsigned long DS_SentNetConsoleBytes()
+{
+    return sent_netcs_bytes;
+}
+
+/**
  * Returns the number of received FMS bytes since the
  * current protocol was loaded.
  *
@@ -529,6 +571,18 @@ unsigned long DS_ReceivedRobotBytes()
 }
 
 /**
+ * Returns the number of received NetConsole bytes since the
+ * current protocol was loaded.
+ *
+ * This value is only reset to 0 when the current protocol
+ * is closed (e.g while loading another protocol).
+ */
+unsigned long DS_ReceivedNetConsoleBytes()
+{
+    return recv_netcs_bytes;
+}
+
+/**
  * Returns the number of sent FMS packets.
  *
  * This value is reset when the communications with
@@ -559,6 +613,17 @@ int DS_SentRadioPackets()
 int DS_SentRobotPackets()
 {
     return DS_Max (1, sent_robot_packets);
+}
+
+/**
+ * Returns the number of sent NetConsole packets.
+ *
+ * This value is reset when the communications with
+ * the robot are changed, or when the protocol is changed.
+ */
+int DS_SentNetConsolePackets()
+{
+    return DS_Max (1, sent_netcs_packets);
 }
 
 /**
@@ -595,6 +660,17 @@ int DS_ReceivedRobotPackets()
 }
 
 /**
+ * Returns the number of received NetConsole packets.
+ *
+ * This value is reset when the communications with
+ * the robot are changed, or when the protocol is changed.
+ */
+int DS_ReceivedNetConsolePackets()
+{
+    return received_netcs_packets;
+}
+
+/**
  * Resets the number of sent/received FMS packets.
  * This function is called when the connection state with the FMS is changed
  */
@@ -622,4 +698,14 @@ void DS_ResetRobotPackets()
 {
     sent_robot_packets = 0;
     received_robot_packets = 0;
+}
+
+/**
+ * Resets the number of sent/received NetConsole packets.
+ * This function is called when the connection state with the robot is changed
+ */
+void DS_ResetNetConsolePackets()
+{
+    sent_netcs_packets = 0;
+    received_netcs_packets = 0;
 }
