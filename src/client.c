@@ -512,6 +512,6 @@ void DS_SendNetConsoleMessage (const char* message)
 
     if (DS_CurrentProtocol()) {
         DS_String data = DS_StrNew (message);
-        DS_SocketSend (&DS_CurrentProtocol()->netconsole_socket, &data);
+        DS_SocketSend (&DS_CurrentProtocol()->netcs_socket, &data);
     }
 }

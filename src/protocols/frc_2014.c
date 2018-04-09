@@ -526,9 +526,9 @@ DS_Protocol DS_GetProtocolFRC_2014 (void)
     protocol.robot_socket.out_port = 1110;
     protocol.robot_socket.type = DS_SOCKET_UDP;
 
-    /* Define netconsole socket properties */
-    protocol.netconsole_socket = *DS_SocketEmpty();
-    protocol.netconsole_socket.disabled = 1;
+    /* Define NetConsole socket properties */
+    protocol.netcs_socket = *DS_SocketEmpty();
+    protocol.netcs_socket.disabled = 1;
 
     /* Return the pointer */
     return protocol;

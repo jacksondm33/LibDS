@@ -197,9 +197,8 @@ static void send_data()
     }
 
     /* Send NetConsole packet */
-    if (false) { // TODO Implement NetConsole sending
-        send_netcs_data();
-    }
+    //    if ()   // TODO Implement NetConsole sending
+    //        send_netcs_data();
 }
 
 /**
@@ -240,28 +239,28 @@ static void recv_data()
 
     /* Read FMS packet */
     if (DS_StrLen (&fms_data) > 0) {
-        ++received_fms_packets;
+        ++recv_fms_packets;
         fms_read = protocol.read_fms_packet (&fms_data);
         CFG_SetFMSCommunications (fms_read);
     }
 
     /* Read radio packet */
     if (DS_StrLen (&radio_data) > 0) {
-        ++received_radio_packets;
+        ++recv_radio_packets;
         radio_read = protocol.read_radio_packet (&radio_data);
         CFG_SetRadioCommunications (radio_read);
     }
 
     /* Read robot packet */
     if (DS_StrLen (&robot_data) > 0) {
-        ++received_robot_packets;
+        ++recv_robot_packets;
         robot_read = protocol.read_robot_packet (&robot_data);
         CFG_SetRobotCommunications (robot_read);
     }
 
     /* Add NetConsole message to event system */
     if (DS_StrLen (&netcs_data) > 0) {
-        ++received_netcs_packets;
+        ++recv_netcs_packets;
         protocol.read_netcs_packet (&netcs_data);
     }
 
@@ -633,7 +632,7 @@ int DS_SentNetConsolePackets()
  */
 int DS_ReceivedFMSPackets()
 {
-    return received_fms_packets;
+    return recv_fms_packets;
 }
 
 /**
@@ -644,7 +643,7 @@ int DS_ReceivedFMSPackets()
  */
 int DS_ReceivedRadioPackets()
 {
-    return received_radio_packets;
+    return recv_radio_packets;
 }
 
 /**
@@ -655,7 +654,7 @@ int DS_ReceivedRadioPackets()
  */
 int DS_ReceivedRobotPackets()
 {
-    return received_robot_packets;
+    return recv_robot_packets;
 }
 
 /**
@@ -666,7 +665,7 @@ int DS_ReceivedRobotPackets()
  */
 int DS_ReceivedNetConsolePackets()
 {
-    return received_netcs_packets;
+    return recv_netcs_packets;
 }
 
 /**
@@ -676,7 +675,7 @@ int DS_ReceivedNetConsolePackets()
 void DS_ResetFMSPackets()
 {
     sent_fms_packets = 0;
-    received_fms_packets = 0;
+    recv_fms_packets = 0;
 }
 
 /**
@@ -686,7 +685,7 @@ void DS_ResetFMSPackets()
 void DS_ResetRadioPackets()
 {
     sent_radio_packets = 0;
-    received_radio_packets = 0;
+    recv_radio_packets = 0;
 }
 
 /**
@@ -696,7 +695,7 @@ void DS_ResetRadioPackets()
 void DS_ResetRobotPackets()
 {
     sent_robot_packets = 0;
-    received_robot_packets = 0;
+    recv_robot_packets = 0;
 }
 
 /**
@@ -706,5 +705,5 @@ void DS_ResetRobotPackets()
 void DS_ResetNetConsolePackets()
 {
     sent_netcs_packets = 0;
-    received_netcs_packets = 0;
+    recv_netcs_packets = 0;
 }

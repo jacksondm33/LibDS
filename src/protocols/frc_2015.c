@@ -702,13 +702,13 @@ static int read_netcs_packet (const DS_String* data)
         return 0;
 
     /* Read count */
-//    uint8_t count = (uint8_t) DS_StrCharAt (data, 9);
+    //    uint8_t count = (uint8_t) DS_StrCharAt (data, 9);
 
     /* Read message */
-    DS_String* message = &DS_StrNewLen (DS_StrLen (data) - 10);
+    DS_String message = DS_StrNewLen (DS_StrLen (data) - 10);
     for (int i = 10; i < DS_StrLen (data); i++)
-        DS_StrAppend (message, DS_StrCharAt (data, i));
-    CFG_AddNetConsoleMessage(message);
+        DS_StrAppend (&message, DS_StrCharAt (data, i));
+    CFG_AddNetConsoleMessage (&message);
 
     return 1;
 }
