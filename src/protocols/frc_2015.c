@@ -679,6 +679,20 @@ static int read_robot_packet (const DS_String* data)
  */
 static int read_netcs_packet (const DS_String* data)
 {
+    /*
+     * 0  - Unused (0)
+     * 1  -
+     * 2  - Type (Print - 0c, Warning - 0b)
+     * 3  -
+     * 4  -
+     * 5  -
+     * 6  -
+     * 7  -
+     * 8  - Unused (0)
+     * 9  - Count
+     * 10 - Start message
+     */
+
     /* Data pointer is invalid */
     if (!data)
         return 0;
@@ -686,6 +700,15 @@ static int read_netcs_packet (const DS_String* data)
     /* Packet is too small */
     if (DS_StrLen (data) < 1)
         return 0;
+
+    /* Read count */
+//    uint8_t count = (uint8_t) DS_StrCharAt (data, 9);
+
+    /* Read message */
+    DS_String* message = &DS_StrNewLen (DS_StrLen (data) - 10);
+    for (int i = 10; i < DS_StrLen (data); i++)
+        DS_StrAppend (message, DS_StrCharAt (data, i));
+    CFG_AddNetConsoleMessage(message);
 
     return 1;
 }

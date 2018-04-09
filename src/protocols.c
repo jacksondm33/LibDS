@@ -262,8 +262,7 @@ static void recv_data()
     /* Add NetConsole message to event system */
     if (DS_StrLen (&netcs_data) > 0) {
         ++received_netcs_packets;
-        netcs_read = protocol.read_netcs_packet (&netcs_data);
-        CFG_AddNetConsoleMessage (netcs_read);
+        protocol.read_netcs_packet (&netcs_data);
     }
 
     /* Reset the data pointers */
