@@ -563,20 +563,6 @@ static DS_String create_robot_packet (void)
 }
 
 /**
- * Generates a packet that the DS will send to the NetConsole, it contains the
- * following information:
- */
-static DS_String create_netcs_packet (void)
-{
-    DS_String data = DS_StrNewLen (0);
-
-    /* Increase NetConsole packet counter */
-    ++sent_netcs_packets;
-
-    return data;
-}
-
-/**
  * Interprets the packet and follows the instructions sent by the FMS.
  * Possible instructions are:
  *   - Change robot control mode
@@ -670,46 +656,6 @@ static int read_robot_packet (const DS_String* data)
         read_extended (data, 8);
 
     /* Packet read, feed the watchdog some meat */
-    return 1;
-}
-
-/**
- * Interprets the packet and obtains the following information:
- *    - The message
- */
-static int read_netcs_packet (const DS_String* data)
-{
-    /*
-     * 0  - Unused (0)
-     * 1  -
-     * 2  - Type (Print - 0c, Warning - 0b)
-     * 3  -
-     * 4  -
-     * 5  -
-     * 6  -
-     * 7  -
-     * 8  - Unused (0)
-     * 9  - Count
-     * 10 - Start message
-     */
-
-    /* Data pointer is invalid */
-    if (!data)
-        return 0;
-
-    /* Packet is too small */
-    if (DS_StrLen (data) < 1)
-        return 0;
-
-    /* Read count */
-    //    uint8_t count = (uint8_t) DS_StrCharAt (data, 9);
-
-    /* Read message */
-    DS_String message = DS_StrNewLen (DS_StrLen (data) - 10);
-    for (int i = 10; i < DS_StrLen (data); i++)
-        DS_StrAppend (&message, DS_StrCharAt (data, i));
-    CFG_AddNetConsoleMessage (&message);
-
     return 1;
 }
 
@@ -824,9 +770,10 @@ DS_Protocol DS_GetProtocolFRC_2015 (void)
     /* Define NetConsole socket properties */
     protocol.netcs_socket = *DS_SocketEmpty();
     protocol.netcs_socket.disabled = 0;
-    protocol.netcs_socket.in_port = 1700;
-    protocol.netcs_socket.out_port = 1740;
-    protocol.netcs_socket.type = DS_SOCKET_TCP;
+    protocol.netcs_socket.broadcast = 1;
+    protocol.netcs_socket.in_port = 6666;
+    protocol.netcs_socket.out_port = 6668;
+    protocol.netcs_socket.type = DS_SOCKET_UDP;
 
     /* Return the protocol */
     return protocol;
