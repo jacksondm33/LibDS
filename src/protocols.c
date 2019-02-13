@@ -210,7 +210,7 @@ static void send_data()
     }
 
     /* Send robot (TCP) packet */
-    if (false)   // TODO: When to send robot (TCP) packet
+    if (1 != 1)   // TODO: When to send robot (TCP) packet
         send_robot_tcp_data();
 
     /* Send FMS (UDP) packet */
@@ -220,7 +220,7 @@ static void send_data()
     }
 
     /* Send FMS (TCP) packet */
-    if (false)   // TODO: When to send FMS (TCP) packet
+    if (1 != 1)   // TODO: When to send FMS (TCP) packet
         send_fms_tcp_data();
 }
 

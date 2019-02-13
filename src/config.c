@@ -148,7 +148,8 @@ void CFG_ReconfigureAddresses (const int flags)
 
     if (flags & RECONFIGURE_FMS) {
         char* address = DS_GetAppliedFMSAddress();
-        DS_SocketChangeAddress (&DS_CurrentProtocol()->fms_socket, address);
+        DS_SocketChangeAddress (&DS_CurrentProtocol()->fms_udp_socket, address);
+        DS_SocketChangeAddress (&DS_CurrentProtocol()->fms_tcp_socket, address);
         DS_FREE (address);
     }
 
@@ -160,7 +161,8 @@ void CFG_ReconfigureAddresses (const int flags)
 
     if (flags & RECONFIGURE_ROBOT) {
         char* address = DS_GetAppliedRobotAddress();
-        DS_SocketChangeAddress (&DS_CurrentProtocol()->robot_socket, address);
+        DS_SocketChangeAddress (&DS_CurrentProtocol()->robot_udp_socket, address);
+        DS_SocketChangeAddress (&DS_CurrentProtocol()->robot_tcp_socket, address);
         DS_FREE (address);
     }
 }
@@ -470,7 +472,8 @@ void CFG_SetFMSCommunications (const int communications)
         event.fms.connected = fms_communications;
         DS_AddEvent (&event);
 
-        DS_ResetFMSPackets();
+        DS_ResetFMSUDPPackets();
+        DS_ResetFMSTCPPackets();
     }
 }
 
@@ -501,7 +504,8 @@ void CFG_SetRobotCommunications (const int communications)
         create_robot_event (DS_ROBOT_COMMS_CHANGED);
         create_robot_event (DS_STATUS_STRING_CHANGED);
 
-        DS_ResetRobotPackets();
+        DS_ResetRobotUDPPackets();
+        DS_ResetRobotTCPPackets();
     }
 }
 

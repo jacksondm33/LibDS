@@ -520,16 +520,3 @@ void DS_SetCustomRobotAddress (const char* address)
         CFG_ReconfigureAddresses (RECONFIGURE_ROBOT);
     }
 }
-
-/**
- * Sends the given \a message to the NetConsole of the robot
- */
-void DS_SendNetConsoleMessage (const char* message)
-{
-    assert (message);
-
-    if (DS_CurrentProtocol()) {
-        DS_String data = DS_StrNew (message);
-        DS_SocketSend (&DS_CurrentProtocol()->netcs_socket, &data);
-    }
-}
