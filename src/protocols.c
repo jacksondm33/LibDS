@@ -52,16 +52,16 @@ static int enable_operations = 0;
 /*
  * Define the sender watchdogs (when one expires, we send a packet)
  */
-static DS_Timer fms_send_timer;
 static DS_Timer radio_send_timer;
 static DS_Timer robot_send_timer;
+static DS_Timer fms_send_timer;
 
 /*
  * Define the receiver watchdogs (when one expires, comms are lost)
  */
-static DS_Timer fms_recv_timer;
 static DS_Timer radio_recv_timer;
 static DS_Timer robot_recv_timer;
+static DS_Timer fms_recv_timer;
 
 /*
  * If set to anything else than 0, then the event loop will be allowed to run
@@ -71,60 +71,51 @@ static int running = 0;
 /*
  * Protocol read success booleans (used to feed the watchdogs)
  */
-static int fms_read = 0;
 static int radio_read = 0;
 static int robot_read = 0;
+static int fms_read = 0;
 
 /*
  * Holds the received data
  */
-static DS_String fms_data;
 static DS_String radio_data;
-static DS_String robot_data;
-static DS_String netcs_data;
+static DS_String robot_udp_data;
+static DS_String robot_tcp_data;
+static DS_String fms_udp_data;
+static DS_String fms_tcp_data;
 
 /*
  * Holds the sent/received packets
  */
-static int sent_fms_packets = 0;
 static int sent_radio_packets = 0;
-static int sent_robot_packets = 0;
-static int sent_netcs_packets = 0;
-static int recv_fms_packets = 0;
+static int sent_robot_udp_packets = 0;
+static int sent_robot_tcp_packets = 0;
+static int sent_fms_udp_packets = 0;
+static int sent_fms_tcp_packets = 0;
 static int recv_radio_packets = 0;
-static int recv_robot_packets = 0;
-static int recv_netcs_packets = 0;
+static int recv_robot_udp_packets = 0;
+static int recv_robot_tcp_packets = 0;
+static int recv_fms_udp_packets = 0;
+static int recv_fms_tcp_packets = 0;
 
 /*
  * Sent/received bytes
  */
-static unsigned long sent_fms_bytes = 0;
 static unsigned long sent_radio_bytes = 0;
-static unsigned long sent_robot_bytes = 0;
-static unsigned long sent_netcs_bytes = 0;
-static unsigned long recv_fms_bytes = 0;
+static unsigned long sent_robot_udp_bytes = 0;
+static unsigned long sent_robot_tcp_bytes = 0;
+static unsigned long sent_fms_udp_bytes = 0;
+static unsigned long sent_fms_tcp_bytes = 0;
 static unsigned long recv_radio_bytes = 0;
-static unsigned long recv_robot_bytes = 0;
-static unsigned long recv_netcs_bytes = 0;
+static unsigned long recv_robot_udp_bytes = 0;
+static unsigned long recv_robot_tcp_bytes = 0;
+static unsigned long recv_fms_udp_bytes = 0;
+static unsigned long recv_fms_tcp_bytes = 0;
 
 /*
  * The thread ID for the protocol event loop
  */
 static pthread_t event_thread;
-
-/**
- * Sends a new packet to the FMS, the generated data is immediately deleted
- * once the packet has been sent
- */
-static void send_fms_data()
-{
-    if (enable_operations) {
-        ++sent_fms_packets;
-        DS_String data = protocol.create_fms_packet();
-        sent_fms_bytes += DS_Max (DS_SocketSend (&protocol.fms_socket, &data), 0);
-        DS_StrRmBuf (&data);
-    }
-}
 
 /**
  * Sends a new packet to the radio, the generated data is immediately deleted
@@ -141,29 +132,57 @@ static void send_radio_data()
 }
 
 /**
- * Sends a new packet to the robot, the generated data is immediately deleted
+ * Sends a new packet to the robot (UDP), the generated data is immediately deleted
  * once the packet has been sent
  */
-static void send_robot_data()
+static void send_robot_udp_data()
 {
     if (enable_operations) {
-        ++sent_robot_packets;
-        DS_String data = protocol.create_robot_packet();
-        sent_robot_bytes += DS_Max (DS_SocketSend (&protocol.robot_socket, &data), 0);
+        ++sent_robot_udp_packets;
+        DS_String data = protocol.create_robot_udp_packet();
+        sent_robot_udp_bytes += DS_Max (DS_SocketSend (&protocol.robot_udp_socket, &data), 0);
         DS_StrRmBuf (&data);
     }
 }
 
 /**
- * Sends a new packet to the NetConsole, the generated data is immediately deleted
+ * Sends a new packet to the robot (TCP), the generated data is immediately deleted
  * once the packet has been sent
  */
-static void send_netcs_data()
+static void send_robot_tcp_data()
 {
     if (enable_operations) {
-        ++sent_netcs_packets;
-        DS_String data = protocol.create_netcs_packet();
-        sent_netcs_bytes += DS_Max (DS_SocketSend (&protocol.netcs_socket, &data), 0);
+        ++sent_robot_tcp_packets;
+        DS_String data = protocol.create_robot_tcp_packet();
+        sent_robot_tcp_bytes += DS_Max (DS_SocketSend (&protocol.robot_tcp_socket, &data), 0);
+        DS_StrRmBuf (&data);
+    }
+}
+
+/**
+ * Sends a new packet to the FMS (UDP), the generated data is immediately deleted
+ * once the packet has been sent
+ */
+static void send_fms_udp_data()
+{
+    if (enable_operations) {
+        ++sent_fms_udp_packets;
+        DS_String data = protocol.create_fms_udp_packet();
+        sent_fms_udp_bytes += DS_Max (DS_SocketSend (&protocol.fms_udp_socket, &data), 0);
+        DS_StrRmBuf (&data);
+    }
+}
+
+/**
+ * Sends a new packet to the FMS (TCP), the generated data is immediately deleted
+ * once the packet has been sent
+ */
+static void send_fms_tcp_data()
+{
+    if (enable_operations) {
+        ++sent_fms_tcp_packets;
+        DS_String data = protocol.create_fms_tcp_packet();
+        sent_fms_tcp_bytes += DS_Max (DS_SocketSend (&protocol.fms_tcp_socket, &data), 0);
         DS_StrRmBuf (&data);
     }
 }
@@ -178,27 +197,31 @@ static void send_data()
     if (!enable_operations)
         return;
 
-    /* Send FMS packet */
-    if (fms_send_timer.expired) {
-        send_fms_data();
-        DS_TimerReset (&fms_send_timer);
-    }
-
     /* Send radio packet */
     if (radio_send_timer.expired) {
         send_radio_data();
         DS_TimerReset (&radio_send_timer);
     }
 
-    /* Send robot packet */
+    /* Send robot (UDP) packet */
     if (robot_send_timer.expired) {
-        send_robot_data();
+        send_robot_udp_data();
         DS_TimerReset (&robot_send_timer);
     }
 
-    /* Send NetConsole packet */
-    //    if ()   // TODO Implement NetConsole sending
-    //        send_netcs_data();
+    /* Send robot (TCP) packet */
+    if (false)   // TODO: When to send robot (TCP) packet
+        send_robot_tcp_data();
+
+    /* Send FMS (UDP) packet */
+    if (fms_send_timer.expired) {
+        send_fms_udp_data();
+        DS_TimerReset (&fms_send_timer);
+    }
+
+    /* Send FMS (TCP) packet */
+    if (false)   // TODO: When to send FMS (TCP) packet
+        send_fms_tcp_data();
 }
 
 /**
@@ -206,10 +229,11 @@ static void send_data()
  */
 static void clear_recv_data()
 {
-    DS_StrRmBuf (&fms_data);
     DS_StrRmBuf (&radio_data);
-    DS_StrRmBuf (&robot_data);
-    DS_StrRmBuf (&netcs_data);
+    DS_StrRmBuf (&robot_udp_data);
+    DS_StrRmBuf (&robot_tcp_data);
+    DS_StrRmBuf (&fms_udp_data);
+    DS_StrRmBuf (&fms_tcp_data);
 }
 
 /**
@@ -226,23 +250,18 @@ static void recv_data()
     clear_recv_data();
 
     /* Read data from sockets */
-    fms_data = DS_SocketRead (&protocol.fms_socket);
     radio_data = DS_SocketRead (&protocol.radio_socket);
-    robot_data = DS_SocketRead (&protocol.robot_socket);
-    netcs_data = DS_SocketRead (&protocol.netcs_socket);
+    robot_udp_data = DS_SocketRead (&protocol.robot_udp_socket);
+    robot_tcp_data = DS_SocketRead (&protocol.robot_tcp_socket);
+    fms_udp_data = DS_SocketRead (&protocol.fms_udp_socket);
+    fms_tcp_data = DS_SocketRead (&protocol.fms_tcp_socket);
 
     /* Update received data indicators */
-    recv_fms_bytes += DS_StrLen (&fms_data);
     recv_radio_bytes += DS_StrLen (&radio_data);
-    recv_robot_bytes += DS_StrLen (&robot_data);
-    recv_netcs_bytes += DS_StrLen (&netcs_data);
-
-    /* Read FMS packet */
-    if (DS_StrLen (&fms_data) > 0) {
-        ++recv_fms_packets;
-        fms_read = protocol.read_fms_packet (&fms_data);
-        CFG_SetFMSCommunications (fms_read);
-    }
+    recv_robot_udp_bytes += DS_StrLen (&robot_udp_data);
+    recv_robot_tcp_bytes += DS_StrLen (&robot_tcp_data);
+    recv_fms_udp_bytes += DS_StrLen (&fms_udp_data);
+    recv_fms_tcp_bytes += DS_StrLen (&fms_tcp_data);
 
     /* Read radio packet */
     if (DS_StrLen (&radio_data) > 0) {
@@ -251,17 +270,30 @@ static void recv_data()
         CFG_SetRadioCommunications (radio_read);
     }
 
-    /* Read robot packet */
-    if (DS_StrLen (&robot_data) > 0) {
-        ++recv_robot_packets;
-        robot_read = protocol.read_robot_packet (&robot_data);
+    /* Read robot (UDP) packet */
+    if (DS_StrLen (&robot_udp_data) > 0) {
+        ++recv_robot_udp_packets;
+        robot_read = protocol.read_robot_udp_packet (&robot_udp_data);
         CFG_SetRobotCommunications (robot_read);
     }
 
-    /* Add NetConsole message to event system */
-    if (DS_StrLen (&netcs_data) > 0) {
-        ++recv_netcs_packets;
-        protocol.read_netcs_packet (&netcs_data);
+    /* Read robot (TCP) packet */
+    if (DS_StrLen (&robot_tcp_data) > 0) {
+        ++recv_robot_tcp_packets;
+        protocol.read_robot_tcp_packet (&robot_tcp_data);
+    }
+
+    /* Read FMS (UDP) packet */
+    if (DS_StrLen (&fms_udp_data) > 0) {
+        ++recv_fms_udp_packets;
+        fms_read = protocol.read_fms_udp_packet (&fms_udp_data);
+        CFG_SetFMSCommunications (fms_read);
+    }
+
+    /* Read FMS (TCP) packet */
+    if (DS_StrLen (&fms_tcp_data) > 0) {
+        ++recv_fms_tcp_packets;
+        protocol.read_fms_tcp_packet (&fms_tcp_data);
     }
 
     /* Reset the data pointers */
@@ -274,20 +306,14 @@ static void recv_data()
 static void update_watchdogs()
 {
     /* Feed the watchdogs if packets are read */
-    if (fms_read)   DS_TimerReset (&fms_recv_timer);
     if (radio_read) DS_TimerReset (&radio_recv_timer);
     if (robot_read) DS_TimerReset (&robot_recv_timer);
+    if (fms_read)   DS_TimerReset (&fms_recv_timer);
 
     /* Clear the read success values */
-    fms_read = 0;
     radio_read = 0;
     robot_read = 0;
-
-    /* Reset the FMS if the watchdog expires */
-    if (fms_recv_timer.expired) {
-        CFG_FMSWatchdogExpired();
-        DS_TimerReset (&fms_recv_timer);
-    }
+    fms_read = 0;
 
     /* Reset the radio if the watchdog expires */
     if (radio_recv_timer.expired) {
@@ -299,6 +325,12 @@ static void update_watchdogs()
     if (robot_recv_timer.expired) {
         CFG_RobotWatchdogExpired();
         DS_TimerReset (&robot_recv_timer);
+    }
+
+    /* Reset the FMS if the watchdog expires */
+    if (fms_recv_timer.expired) {
+        CFG_FMSWatchdogExpired();
+        DS_TimerReset (&fms_recv_timer);
     }
 }
 
@@ -338,14 +370,14 @@ DS_Protocol* DS_CurrentProtocol()
 void Protocols_Init()
 {
     /* Initialize sender timers */
-    DS_TimerInit (&fms_send_timer,   0, SEND_PRECISION);
     DS_TimerInit (&radio_send_timer, 0, SEND_PRECISION);
     DS_TimerInit (&robot_send_timer, 0, SEND_PRECISION);
+    DS_TimerInit (&fms_send_timer,   0, SEND_PRECISION);
 
     /* Initialize watchdog timers */
-    DS_TimerInit (&fms_recv_timer,   0, RECV_PRECISION);
     DS_TimerInit (&radio_recv_timer, 0, RECV_PRECISION);
     DS_TimerInit (&robot_recv_timer, 0, RECV_PRECISION);
+    DS_TimerInit (&fms_recv_timer,   0, RECV_PRECISION);
 
     /* Allow the event loop to run */
     running = 1;
@@ -381,36 +413,40 @@ static void close_protocol()
     enable_operations = 0;
 
     /* Stop sender timers */
-    DS_TimerStop (&fms_send_timer);
     DS_TimerStop (&radio_send_timer);
     DS_TimerStop (&robot_send_timer);
+    DS_TimerStop (&fms_send_timer);
 
     /* Stop receiver timers */
-    DS_TimerStop (&fms_recv_timer);
     DS_TimerStop (&radio_recv_timer);
     DS_TimerStop (&robot_recv_timer);
+    DS_TimerStop (&fms_recv_timer);
 
     /* Close the sockets */
-    DS_SocketClose (&protocol.fms_socket);
     DS_SocketClose (&protocol.radio_socket);
-    DS_SocketClose (&protocol.robot_socket);
-    DS_SocketClose (&protocol.netcs_socket);
+    DS_SocketClose (&protocol.robot_udp_socket);
+    DS_SocketClose (&protocol.robot_tcp_socket);
+    DS_SocketClose (&protocol.fms_udp_socket);
+    DS_SocketClose (&protocol.fms_tcp_socket);
 
     /* Reset sent/recv bytes */
-    sent_fms_bytes = 0;
     sent_radio_bytes = 0;
-    sent_robot_bytes = 0;
-    sent_netcs_bytes = 0;
-    recv_fms_bytes = 0;
+    sent_robot_udp_bytes = 0;
+    sent_robot_tcp_bytes = 0;
+    sent_fms_udp_bytes = 0;
+    sent_fms_tcp_bytes = 0;
     recv_radio_bytes = 0;
-    recv_robot_bytes = 0;
-    recv_netcs_bytes = 0;
+    recv_robot_udp_bytes = 0;
+    recv_robot_tcp_bytes = 0;
+    recv_fms_udp_bytes = 0;
+    recv_fms_tcp_bytes = 0;
 
     /* Reset sent/recv packets */
-    DS_ResetFMSPackets();
     DS_ResetRadioPackets();
-    DS_ResetRobotPackets();
-    DS_ResetNetConsolePackets();
+    DS_ResetRobotUDPPackets();
+    DS_ResetRobotTCPPackets();
+    DS_ResetFMSUDPPackets();
+    DS_ResetFMSTCPPackets();
 
     /* Create notification string */
     char* name = DS_StrToChar (&protocol.name);
@@ -450,28 +486,29 @@ void DS_ConfigureProtocol (const DS_Protocol* ptr)
     protocol = *ptr;
 
     /* Update sockets */
-    DS_SocketOpen (&protocol.fms_socket);
     DS_SocketOpen (&protocol.radio_socket);
-    DS_SocketOpen (&protocol.robot_socket);
-    DS_SocketOpen (&protocol.netcs_socket);
+    DS_SocketOpen (&protocol.robot_udp_socket);
+    DS_SocketOpen (&protocol.robot_tcp_socket);
+    DS_SocketOpen (&protocol.fms_udp_socket);
+    DS_SocketOpen (&protocol.fms_tcp_socket);
 
     /* Update sender timers */
-    fms_send_timer.time = protocol.fms_interval;
     radio_send_timer.time = protocol.radio_interval;
     robot_send_timer.time = protocol.robot_interval;
+    fms_send_timer.time = protocol.fms_interval;
 
     /* Update watchdogs */
-    fms_recv_timer.time = DS_Min (protocol.fms_interval * 50, 1000);
     radio_recv_timer.time = DS_Min (protocol.radio_interval * 50, 1000);
     robot_recv_timer.time = DS_Min (protocol.robot_interval * 50, 1000);
+    fms_recv_timer.time = DS_Min (protocol.fms_interval * 50, 1000);
 
     /* Start the timers */
-    DS_TimerStart (&fms_send_timer);
-    DS_TimerStart (&fms_recv_timer);
     DS_TimerStart (&radio_send_timer);
     DS_TimerStart (&radio_recv_timer);
     DS_TimerStart (&robot_send_timer);
     DS_TimerStart (&robot_recv_timer);
+    DS_TimerStart (&fms_send_timer);
+    DS_TimerStart (&fms_recv_timer);
 
     /* Create notification string */
     char* name = DS_StrToChar (&protocol.name);
@@ -482,18 +519,6 @@ void DS_ConfigureProtocol (const DS_Protocol* ptr)
 
     /* Restore protocol operations */
     enable_operations = 1;
-}
-
-/**
- * Returns the number of sent FMS bytes since the current
- * protocol was loaded.
- *
- * This value is only reset to 0 when the current protocol
- * is closed (e.g while loading another protocol).
- */
-unsigned long DS_SentFMSBytes()
-{
-    return sent_fms_bytes;
 }
 
 /**
@@ -509,39 +534,51 @@ unsigned long DS_SentRadioBytes()
 }
 
 /**
- * Returns the number of sent robot bytes since the current
+ * Returns the number of sent robot (UDP) bytes since the current
  * protocol was loaded.
  *
  * This value is only reset to 0 when the current protocol
  * is closed (e.g while loading another protocol).
  */
-unsigned long DS_SentRobotBytes()
+unsigned long DS_SentRobotUDPBytes()
 {
-    return sent_robot_bytes;
+    return sent_robot_udp_bytes;
 }
 
 /**
- * Returns the number of sent NetConsole bytes since the current
+ * Returns the number of sent robot (TCP) bytes since the current
  * protocol was loaded.
  *
  * This value is only reset to 0 when the current protocol
  * is closed (e.g while loading another protocol).
  */
-unsigned long DS_SentNetConsoleBytes()
+unsigned long DS_SentRobotTCPBytes()
 {
-    return sent_netcs_bytes;
+    return sent_robot_tcp_bytes;
 }
 
 /**
- * Returns the number of received FMS bytes since the
- * current protocol was loaded.
+ * Returns the number of sent FMS (UDP) bytes since the current
+ * protocol was loaded.
  *
  * This value is only reset to 0 when the current protocol
  * is closed (e.g while loading another protocol).
  */
-unsigned long DS_ReceivedFMSBytes()
+unsigned long DS_SentFMSUDPBytes()
 {
-    return recv_fms_bytes;
+    return sent_fms_udp_bytes;
+}
+
+/**
+ * Returns the number of sent FMS (TCP) bytes since the current
+ * protocol was loaded.
+ *
+ * This value is only reset to 0 when the current protocol
+ * is closed (e.g while loading another protocol).
+ */
+unsigned long DS_SentFMSTCPBytes()
+{
+    return sent_fms_tcp_bytes;
 }
 
 /**
@@ -557,38 +594,51 @@ unsigned long DS_ReceivedRadioBytes()
 }
 
 /**
- * Returns the number of received robot bytes since the
+ * Returns the number of received robot (UDP) bytes since the
  * current protocol was loaded.
  *
  * This value is only reset to 0 when the current protocol
  * is closed (e.g while loading another protocol).
  */
-unsigned long DS_ReceivedRobotBytes()
+unsigned long DS_ReceivedRobotUDPBytes()
 {
-    return recv_robot_bytes;
+    return recv_robot_udp_bytes;
 }
 
 /**
- * Returns the number of received NetConsole bytes since the
+ * Returns the number of received robot (TCP) bytes since the
  * current protocol was loaded.
  *
  * This value is only reset to 0 when the current protocol
  * is closed (e.g while loading another protocol).
  */
-unsigned long DS_ReceivedNetConsoleBytes()
+unsigned long DS_ReceivedRobotTCPBytes()
 {
-    return recv_netcs_bytes;
+    return recv_robot_tcp_bytes;
 }
 
 /**
- * Returns the number of sent FMS packets.
+ * Returns the number of received FMS (UDP) bytes since the
+ * current protocol was loaded.
  *
- * This value is reset when the communications with
- * the FMS are changed, or when the protocol is changed.
+ * This value is only reset to 0 when the current protocol
+ * is closed (e.g while loading another protocol).
  */
-int DS_SentFMSPackets()
+unsigned long DS_ReceivedFMSUDPBytes()
 {
-    return DS_Max (1, sent_fms_packets);
+    return recv_fms_udp_bytes;
+}
+
+/**
+ * Returns the number of received FMS (TCP) bytes since the
+ * current protocol was loaded.
+ *
+ * This value is only reset to 0 when the current protocol
+ * is closed (e.g while loading another protocol).
+ */
+unsigned long DS_ReceivedFMSTCPBytes()
+{
+    return recv_fms_tcp_bytes;
 }
 
 /**
@@ -603,36 +653,47 @@ int DS_SentRadioPackets()
 }
 
 /**
- * Returns the number of sent robot packets.
+ * Returns the number of sent robot (UDP) packets.
  *
  * This value is reset when the communications with
  * the robot are changed, or when the protocol is changed.
  */
-int DS_SentRobotPackets()
+int DS_SentRobotUDPPackets()
 {
-    return DS_Max (1, sent_robot_packets);
+    return DS_Max (1, sent_robot_udp_packets);
 }
 
 /**
- * Returns the number of sent NetConsole packets.
+ * Returns the number of sent robot (TCP) packets.
  *
  * This value is reset when the communications with
  * the robot are changed, or when the protocol is changed.
  */
-int DS_SentNetConsolePackets()
+int DS_SentRobotTCPPackets()
 {
-    return DS_Max (1, sent_netcs_packets);
+    return DS_Max (1, sent_robot_tcp_packets);
 }
 
 /**
- * Returns the number of received FMS packets.
+ * Returns the number of sent FMS (UDP) packets.
  *
  * This value is reset when the communications with
  * the FMS are changed, or when the protocol is changed.
  */
-int DS_ReceivedFMSPackets()
+int DS_SentFMSUDPPackets()
 {
-    return recv_fms_packets;
+    return DS_Max (1, sent_fms_udp_packets);
+}
+
+/**
+ * Returns the number of sent FMS (TCP) packets.
+ *
+ * This value is reset when the communications with
+ * the FMS are changed, or when the protocol is changed.
+ */
+int DS_SentFMSTCPPackets()
+{
+    return DS_Max (1, sent_fms_tcp_packets);
 }
 
 /**
@@ -647,35 +708,47 @@ int DS_ReceivedRadioPackets()
 }
 
 /**
- * Returns the number of received robot packets.
+ * Returns the number of received robot (UDP) packets.
  *
  * This value is reset when the communications with
  * the robot are changed, or when the protocol is changed.
  */
-int DS_ReceivedRobotPackets()
+int DS_ReceivedRobotUDPPackets()
 {
-    return recv_robot_packets;
+    return recv_robot_udp_packets;
 }
 
 /**
- * Returns the number of received NetConsole packets.
+ * Returns the number of received robot (TCP) packets.
  *
  * This value is reset when the communications with
  * the robot are changed, or when the protocol is changed.
  */
-int DS_ReceivedNetConsolePackets()
+int DS_ReceivedRobotTCPPackets()
 {
-    return recv_netcs_packets;
+    return recv_robot_tcp_packets;
 }
 
 /**
- * Resets the number of sent/received FMS packets.
- * This function is called when the connection state with the FMS is changed
+ * Returns the number of received FMS (UDP) packets.
+ *
+ * This value is reset when the communications with
+ * the FMS are changed, or when the protocol is changed.
  */
-void DS_ResetFMSPackets()
+int DS_ReceivedFMSUDPPackets()
 {
-    sent_fms_packets = 0;
-    recv_fms_packets = 0;
+    return recv_fms_udp_packets;
+}
+
+/**
+ * Returns the number of received FMS (TCP) packets.
+ *
+ * This value is reset when the communications with
+ * the FMS are changed, or when the protocol is changed.
+ */
+int DS_ReceivedFMSTCPPackets()
+{
+    return recv_fms_tcp_packets;
 }
 
 /**
@@ -689,21 +762,41 @@ void DS_ResetRadioPackets()
 }
 
 /**
- * Resets the number of sent/received robot packets.
+ * Resets the number of sent/received robot (UDP) packets.
  * This function is called when the connection state with the robot is changed
  */
-void DS_ResetRobotPackets()
+void DS_ResetRobotUDPPackets()
 {
-    sent_robot_packets = 0;
-    recv_robot_packets = 0;
+    sent_robot_udp_packets = 0;
+    recv_robot_udp_packets = 0;
 }
 
 /**
- * Resets the number of sent/received NetConsole packets.
+ * Resets the number of sent/received robot (TCP) packets.
  * This function is called when the connection state with the robot is changed
  */
-void DS_ResetNetConsolePackets()
+void DS_ResetRobotTCPPackets()
 {
-    sent_netcs_packets = 0;
-    recv_netcs_packets = 0;
+    sent_robot_tcp_packets = 0;
+    recv_robot_tcp_packets = 0;
+}
+
+/**
+ * Resets the number of sent/received FMS (UDP) packets.
+ * This function is called when the connection state with the FMS is changed
+ */
+void DS_ResetFMSUDPPackets()
+{
+    sent_fms_udp_packets = 0;
+    recv_fms_udp_packets = 0;
+}
+
+/**
+ * Resets the number of sent/received FMS (TCP) packets.
+ * This function is called when the connection state with the FMS is changed
+ */
+void DS_ResetFMSTCPPackets()
+{
+    sent_fms_tcp_packets = 0;
+    recv_fms_tcp_packets = 0;
 }

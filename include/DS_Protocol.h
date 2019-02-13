@@ -33,30 +33,32 @@ extern "C" {
 
 typedef struct _protocol {
     DS_String name;
-    DS_String (*fms_address) (void);
     DS_String (*radio_address) (void);
     DS_String (*robot_address) (void);
+    DS_String (*fms_address) (void);
 
-    DS_String (*create_fms_packet) (void);
     DS_String (*create_radio_packet) (void);
-    DS_String (*create_robot_packet) (void);
+    DS_String (*create_robot_udp_packet) (void);
     DS_String (*create_robot_tcp_packet) (void);
+    DS_String (*create_fms_udp_packet) (void);
+    DS_String (*create_fms_tcp_packet) (void);
 
-    int (*read_fms_packet) (const DS_String*);
     int (*read_radio_packet) (const DS_String*);
-    int (*read_robot_packet) (const DS_String*);
+    int (*read_robot_udp_packet) (const DS_String*);
     int (*read_robot_tcp_packet) (const DS_String*);
+    int (*read_fms_udp_packet) (const DS_String*);
+    int (*read_fms_tcp_packet) (const DS_String*);
 
-    void (*reset_fms) (void);
     void (*reset_radio) (void);
     void (*reset_robot) (void);
+    void (*reset_fms) (void);
 
     void (*reboot_robot) (void);
     void (*restart_robot_code) (void);
 
-    int fms_interval;
     int radio_interval;
     int robot_interval;
+    int fms_interval;
 
     int max_joysticks;
     int max_axis_count;
@@ -64,40 +66,46 @@ typedef struct _protocol {
     int max_button_count;
     float max_battery_voltage;
 
-    DS_Socket fms_socket;
     DS_Socket radio_socket;
-    DS_Socket robot_socket;
+    DS_Socket robot_udp_socket;
     DS_Socket robot_tcp_socket;
+    DS_Socket fms_udp_socket;
+    DS_Socket fms_tcp_socket;
 } DS_Protocol;
 
 extern void Protocols_Init();
 extern void Protocols_Close();
 extern void DS_ConfigureProtocol (const DS_Protocol* ptr);
 
-extern unsigned long DS_SentFMSBytes();
 extern unsigned long DS_SentRadioBytes();
 extern unsigned long DS_SentRobotUDPBytes();
 extern unsigned long DS_SentRobotTCPBytes();
+extern unsigned long DS_SentFMSUDPBytes();
+extern unsigned long DS_SentFMSTCPBytes();
 
-extern unsigned long DS_ReceivedFMSBytes();
 extern unsigned long DS_ReceivedRadioBytes();
 extern unsigned long DS_ReceivedRobotUDPBytes();
 extern unsigned long DS_ReceivedRobotTCPBytes();
+extern unsigned long DS_ReceivedFMSUDPBytes();
+extern unsigned long DS_ReceivedFMSTCPBytes();
 
-extern int DS_SentFMSPackets();
 extern int DS_SentRadioPackets();
 extern int DS_SentRobotUDPPackets();
 extern int DS_SentRobotTCPPackets();
+extern int DS_SentFMSUDPPackets();
+extern int DS_SentFMSTCPPackets();
 
-extern int DS_ReceivedFMSPackets();
 extern int DS_ReceivedRadioPackets();
 extern int DS_ReceivedRobotUDPPackets();
 extern int DS_ReceivedRobotTCPPackets();
+extern int DS_ReceivedFMSUDPPackets();
+extern int DS_ReceivedFMSTCPPackets();
 
-extern void DS_ResetFMSPackets();
 extern void DS_ResetRadioPackets();
 extern void DS_ResetRobotUDPPackets();
 extern void DS_ResetRobotTCPPackets();
+extern void DS_ResetFMSUDPPackets();
+extern void DS_ResetFMSTCPPackets();
 
 extern DS_Protocol* DS_CurrentProtocol();
 

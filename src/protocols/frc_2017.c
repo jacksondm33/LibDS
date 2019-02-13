@@ -571,8 +571,8 @@ static DS_String create_robot_tcp_packet (int type, const DS_String* input_data)
     DS_String data = DS_StrNewLen (DS_StrLen (input_data) + 3);
 
     uint16_t size = (uint16_t) DS_StrLen (input_data) + 1;
-    DS_StrSetChar(&data, 0, (uint8_t) (size >> 8));
-    DS_StrSetChar(&data, 1, (uint8_t) size);
+    DS_StrSetChar (&data, 0, (uint8_t) (size >> 8));
+    DS_StrSetChar (&data, 1, (uint8_t) size);
 
     /* Increase robot TCP packet counter */
     ++sent_robot_tcp_packets;
