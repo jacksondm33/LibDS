@@ -465,7 +465,7 @@ static DS_String robot_address (void)
  */
 static DS_String fms_address (void)
 {
-  return DS_StrNew (DS_FallBackAddress);
+    return DS_StrNew (DS_FallBackAddress);
 }
 
 /**
@@ -759,7 +759,7 @@ static void reset_robot (void)
  */
 static void reset_fms (void)
 {
-  /* Nothing to do */
+    /* Nothing to do */
 }
 
 /**
