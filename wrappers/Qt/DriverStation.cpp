@@ -433,6 +433,14 @@ DriverStation::Position DriverStation::teamPosition() const
 }
 
 /**
+ * Returns the game data string used by LibDS
+ */
+QString DriverStation::gameData() const
+{
+    return QString::fromUtf8 (DS_GetGameData());
+}
+
+/**
  * Returns the internet address that the Driver Station is using to communicate
  * with the Field Management System.
  */
@@ -567,6 +575,7 @@ QStringList DriverStation::protocols() const
 {
     QStringList list;
 
+    list.append (tr ("FRC 2018"));
     list.append (tr ("FRC 2016"));
     list.append (tr ("FRC 2015"));
     list.append (tr ("FRC 2014"));
@@ -728,6 +737,16 @@ void DriverStation::setTeamNumber (const int number)
 }
 
 /**
+ * Changes the game \a data string of the LibDS
+ */
+void DriverStation::setGameData (const QString& data)
+{
+    DS_SetGameData (data.toStdString().c_str());
+    LOG << "Game Data set to" << DS_GetGameData();
+    emit gameDataChanged();
+}
+
+/**
  * De-allocates the current protocol and loads the given \a protocol
  *
  * \param protocol the new communication protocol to use
@@ -792,6 +811,10 @@ void DriverStation::setProtocol (const Protocol protocol)
     case Protocol2016:
         loadProtocol (DS_GetProtocolFRC_2016());
         LOG << "Switched to FRC 2016 Protocol";
+        break;
+    case Protocol2018:
+        loadProtocol (DS_GetProtocolFRC_2018());
+        LOG << "Switched to FRC 2018 Protocol";
         break;
     default:
         break;

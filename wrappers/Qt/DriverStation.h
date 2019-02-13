@@ -167,6 +167,10 @@ class DriverStation : public QObject
                 NOTIFY controlModeChanged)
     Q_PROPERTY (bool canBeEnabled
                 READ canBeEnabled)
+    Q_PROPERTY (QString gameData
+                READ gameData
+                WRITE setGameData
+                NOTIFY gameDataChanged)
 
 public:
     static DriverStation* getInstance();
@@ -179,32 +183,33 @@ public:
     Q_ENUMS (Control)
 
     enum Protocol {
-        Protocol2016 = 0x00,
-        Protocol2015 = 0x01,
-        Protocol2014 = 0x02,
+        Protocol2018,
+        Protocol2016,
+        Protocol2015,
+        Protocol2014,
     };
     Q_ENUMS (Protocol)
 
     enum Alliance {
-        AllianceRed = 0x00,
-        AllianceBlue = 0x01,
+        AllianceRed,
+        AllianceBlue,
     };
     Q_ENUMS (Alliance)
 
     enum Position {
-        Position1 = 0x00,
-        Position2 = 0x01,
-        Position3 = 0x02,
+        Position1,
+        Position2,
+        Position3,
     };
     Q_ENUMS (Position)
 
     enum Station {
-        StationRed1 = 0x00,
-        StationRed2 = 0x01,
-        StationRed3 = 0x02,
-        StationBlue1 = 0x03,
-        StationBlue2 = 0x04,
-        StationBlue3 = 0x05,
+        StationRed1,
+        StationRed2,
+        StationRed3,
+        StationBlue1,
+        StationBlue2,
+        StationBlue3,
     };
     Q_ENUMS (Station)
 
@@ -251,6 +256,8 @@ public:
     Alliance teamAlliance() const;
     Position teamPosition() const;
 
+    QString gameData() const;
+
     QString appliedFMSAddress() const;
     QString appliedRadioAddress() const;
     QString appliedRobotAddress() const;
@@ -286,6 +293,7 @@ public slots:
     void restartRobotCode();
     void setEnabled (const bool enabled);
     void setTeamNumber (const int number);
+    void setGameData (const QString& data);
     void loadProtocol (const DS_Protocol& protocol);
     void setControlMode (const Control mode);
     void setProtocol (const Protocol protocol);
@@ -314,6 +322,7 @@ private:
 
 signals:
     void stationChanged();
+    void gameDataChanged();
     void protocolChanged();
     void fmsAddressChanged();
     void radioAddressChanged();
