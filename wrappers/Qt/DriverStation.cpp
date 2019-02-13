@@ -82,8 +82,8 @@ int DriverStation::diskUsage() const
  */
 int DriverStation::fmsPacketLoss() const
 {
-    qreal sent = (qreal) DS_SentFMSPackets();
-    qreal recv = (qreal) DS_ReceivedFMSPackets();
+    qreal sent = (qreal) DS_SentFMSUDPPackets();
+    qreal recv = (qreal) DS_ReceivedFMSUDPPackets();
 
     if (sent > 0)
         return (1 - (recv / sent)) * 100;
@@ -110,8 +110,8 @@ int DriverStation::radioPacketLoss() const
  */
 int DriverStation::robotPacketLoss() const
 {
-    qreal sent = (qreal) DS_SentRobotPackets();
-    qreal recv = (qreal) DS_ReceivedRobotPackets();
+    qreal sent = (qreal) DS_SentRobotUDPPackets();
+    qreal recv = (qreal) DS_ReceivedRobotUDPPackets();
 
     if (sent > 0)
         return (1 - (recv / sent)) * 100;
@@ -576,20 +576,26 @@ QStringList DriverStation::protocols() const
     QStringList list;
 
     list.append (tr ("FRC 2018"));
-    list.append (tr ("FRC 2016"));
-    list.append (tr ("FRC 2015"));
-    list.append (tr ("FRC 2014"));
 
     return list;
 }
 
 /**
- * Returns the number of sent FMS bytes since the current
+ * Returns the number of sent FMS (UDP) bytes since the current
  * protocol was loaded
  */
-unsigned long DriverStation::sentFMSBytes() const
+unsigned long DriverStation::sentFMSUDPBytes() const
 {
-    return DS_SentFMSBytes();
+    return DS_SentFMSUDPBytes();
+}
+
+/**
+ * Returns the number of sent FMS (TCP) bytes since the current
+ * protocol was loaded
+ */
+unsigned long DriverStation::sentFMSTCPBytes() const
+{
+    return DS_SentFMSTCPBytes();
 }
 
 /**
@@ -602,21 +608,39 @@ unsigned long DriverStation::sentRadioBytes() const
 }
 
 /**
- * Returns the number of sent robot bytes since the current
+ * Returns the number of sent robot (UDP) bytes since the current
  * protocol was loaded
  */
-unsigned long DriverStation::sentRobotBytes() const
+unsigned long DriverStation::sentRobotUDPBytes() const
 {
-    return DS_SentRobotBytes();
+    return DS_SentRobotUDPBytes();
 }
 
 /**
- * Returns the number of received FMS bytes since the current
+ * Returns the number of sent robot (TCP) bytes since the current
  * protocol was loaded
  */
-unsigned long DriverStation::receivedFMSBytes() const
+unsigned long DriverStation::sentRobotTCPBytes() const
 {
-    return DS_ReceivedFMSBytes();
+    return DS_SentRobotTCPBytes();
+}
+
+/**
+ * Returns the number of received FMS (UDP) bytes since the current
+ * protocol was loaded
+ */
+unsigned long DriverStation::receivedFMSUDPBytes() const
+{
+    return DS_ReceivedFMSUDPBytes();
+}
+
+/**
+ * Returns the number of received FMS (TCP) bytes since the current
+ * protocol was loaded
+ */
+unsigned long DriverStation::receivedFMSTCPBytes() const
+{
+    return DS_ReceivedFMSTCPBytes();
 }
 
 /**
@@ -629,12 +653,21 @@ unsigned long DriverStation::receivedRadioBytes() const
 }
 
 /**
- * Returns the number of received robot bytes since the current
+ * Returns the number of received robot (UDP) bytes since the current
  * protocol was loaded
  */
-unsigned long DriverStation::receivedRobotBytes() const
+unsigned long DriverStation::receivedRobotUDPBytes() const
 {
-    return DS_ReceivedRobotBytes();
+    return DS_ReceivedRobotUDPBytes();
+}
+
+/**
+ * Returns the number of received robot (TCP) bytes since the current
+ * protocol was loaded
+ */
+unsigned long DriverStation::receivedRobotTCPBytes() const
+{
+    return DS_ReceivedRobotTCPBytes();
 }
 
 /**
@@ -800,18 +833,6 @@ void DriverStation::setControlMode (const Control mode)
 void DriverStation::setProtocol (const Protocol protocol)
 {
     switch ((Protocol) protocol) {
-    case Protocol2014:
-        loadProtocol (DS_GetProtocolFRC_2014());
-        LOG << "Switched to FRC 2014 Protocol";
-        break;
-    case Protocol2015:
-        loadProtocol (DS_GetProtocolFRC_2015());
-        LOG << "Switched to FRC 2015 Protocol";
-        break;
-    case Protocol2016:
-        loadProtocol (DS_GetProtocolFRC_2016());
-        LOG << "Switched to FRC 2016 Protocol";
-        break;
     case Protocol2018:
         loadProtocol (DS_GetProtocolFRC_2018());
         LOG << "Switched to FRC 2018 Protocol";
@@ -948,15 +969,6 @@ void DriverStation::setCustomRobotAddress (const QString& address)
     LOG << "Using new robot address" << getAddress (address);
     DS_SetCustomRobotAddress (getAddress (address).toStdString().c_str());
     emit robotAddressChanged();
-}
-
-/**
- * Broadcasts/sends the given \a message to the NetConsole network
- */
-void DriverStation::sendNetConsoleMessage (const QString& message)
-{
-    if (!message.isEmpty())
-        DS_SendNetConsoleMessage (message.toStdString().c_str());
 }
 
 /**

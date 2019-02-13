@@ -184,9 +184,6 @@ public:
 
     enum Protocol {
         Protocol2018,
-        Protocol2016,
-        Protocol2015,
-        Protocol2014,
     };
     Q_ENUMS (Protocol)
 
@@ -275,12 +272,16 @@ public:
     QStringList stations() const;
     QStringList protocols() const;
 
-    Q_INVOKABLE unsigned long sentFMSBytes() const;
+    Q_INVOKABLE unsigned long sentFMSUDPBytes() const;
+    Q_INVOKABLE unsigned long sentFMSTCPBytes() const;
     Q_INVOKABLE unsigned long sentRadioBytes() const;
-    Q_INVOKABLE unsigned long sentRobotBytes() const;
-    Q_INVOKABLE unsigned long receivedFMSBytes() const;
+    Q_INVOKABLE unsigned long sentRobotUDPBytes() const;
+    Q_INVOKABLE unsigned long sentRobotTCPBytes() const;
+    Q_INVOKABLE unsigned long receivedFMSUDPBytes() const;
+    Q_INVOKABLE unsigned long receivedFMSTCPBytes() const;
     Q_INVOKABLE unsigned long receivedRadioBytes() const;
-    Q_INVOKABLE unsigned long receivedRobotBytes() const;
+    Q_INVOKABLE unsigned long receivedRobotUDPBytes() const;
+    Q_INVOKABLE unsigned long receivedRobotTCPBytes() const;
 
     Q_INVOKABLE int getNumAxes (const int joystick) const;
     Q_INVOKABLE int getNumHats (const int joystick) const;
@@ -304,7 +305,6 @@ public slots:
     void setCustomFMSAddress (const QString& address);
     void setCustomRadioAddress (const QString& address);
     void setCustomRobotAddress (const QString& address);
-    void sendNetConsoleMessage (const QString& message);
 
     void addJoystick (int axes, int hats, int buttons);
     void setJoystickHat (int joystick, int hat, int angle);
