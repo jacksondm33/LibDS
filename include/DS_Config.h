@@ -42,9 +42,9 @@
 extern "C" {
 #endif
 
-#define RECONFIGURE_FMS   0x01
-#define RECONFIGURE_RADIO 0x02
-#define RECONFIGURE_ROBOT 0x04
+#define RECONFIGURE_RADIO 0x01
+#define RECONFIGURE_ROBOT 0x02
+#define RECONFIGURE_FMS   0x04
 #define RECONFIGURE_ALL   0x01 | 0x02 | 0x04
 
 /* Misc */
@@ -67,9 +67,9 @@ extern DS_String* CFG_GetGameData (void);
 extern DS_Alliance CFG_GetAlliance (void);
 extern DS_Position CFG_GetPosition (void);
 extern int CFG_GetEmergencyStopped (void);
-extern int CFG_GetFMSCommunications (void);
 extern int CFG_GetRadioCommunications (void);
 extern int CFG_GetRobotCommunications (void);
+extern int CFG_GetFMSCommunications (void);
 extern DS_ControlMode CFG_GetControlMode (void);
 
 /* Setters */
@@ -86,14 +86,14 @@ extern void CFG_SetAlliance (const DS_Alliance alliance);
 extern void CFG_SetPosition (const DS_Position position);
 extern void CFG_SetCANUtilization (const int utilization);
 extern void CFG_SetControlMode (const DS_ControlMode mode);
-extern void CFG_SetFMSCommunications (const int communications);
 extern void CFG_SetRadioCommunications (const int communications);
 extern void CFG_SetRobotCommunications (const int communications);
+extern void CFG_SetFMSCommunications (const int communications);
 
 /* Watchdog functions */
-extern void CFG_FMSWatchdogExpired (void);
 extern void CFG_RadioWatchdogExpired (void);
 extern void CFG_RobotWatchdogExpired (void);
+extern void CFG_FMSWatchdogExpired (void);
 
 #ifdef __cplusplus
 }

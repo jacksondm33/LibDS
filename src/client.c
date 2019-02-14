@@ -35,9 +35,9 @@
  * Set the strings
  */
 static DS_String status_string;
-static DS_String custom_fms_address;
 static DS_String custom_radio_address;
 static DS_String custom_robot_address;
+static DS_String custom_fms_address;
 
 /**
  * Allocates memory for the members of the client module
@@ -45,9 +45,9 @@ static DS_String custom_robot_address;
 void Client_Init (void)
 {
     status_string = DS_StrNew ("Loading...");
-    custom_fms_address = DS_StrNew (DS_FallBackAddress);
     custom_radio_address = DS_StrNew (DS_FallBackAddress);
     custom_robot_address = DS_StrNew (DS_FallBackAddress);
+    custom_fms_address = DS_StrNew (DS_FallBackAddress);
 
     DS_SetGameData ("");
 }
@@ -58,19 +58,9 @@ void Client_Init (void)
 void Client_Close (void)
 {
     DS_StrRmBuf (&status_string);
-    DS_StrRmBuf (&custom_fms_address);
     DS_StrRmBuf (&custom_radio_address);
     DS_StrRmBuf (&custom_robot_address);
-}
-
-/**
- * Returns the user-set FMS address.
- * This value may be empty, if that's the case, then the Driver Station will
- * use the addresses specified by the currently loaded protocol.
- */
-char* DS_GetCustomFMSAddress (void)
-{
-    return DS_StrToChar (&custom_fms_address);
+    DS_StrRmBuf (&custom_fms_address);
 }
 
 /**
@@ -94,19 +84,13 @@ char* DS_GetCustomRobotAddress (void)
 }
 
 /**
- * Returns the protocol-set FMS address, this address may change when the team
- * number is changed, if your application relies on this value, consider
- * updating in reguraly or using the events system of the LibDS.
+ * Returns the user-set FMS address.
+ * This value may be empty, if that's the case, then the Driver Station will
+ * use the addresses specified by the currently loaded protocol.
  */
-char* DS_GetDefaultFMSAddress (void)
+char* DS_GetCustomFMSAddress (void)
 {
-    if (DS_CurrentProtocol()) {
-        DS_String address = DS_CurrentProtocol()->fms_address();
-        return DS_StrToChar (&address);
-    }
-
-    else
-        return DS_FallBackAddress;
+    return DS_StrToChar (&custom_fms_address);
 }
 
 /**
@@ -142,17 +126,19 @@ char* DS_GetDefaultRobotAddress (void)
 }
 
 /**
- * Returns the address used to communicate with the FMS.
- * If the user-set address is not empty, then this function will return the
- * user-set address. Otherwise, this function will return the address
- * specified  by the currently loaded protocol.
+ * Returns the protocol-set FMS address, this address may change when the team
+ * number is changed, if your application relies on this value, consider
+ * updating in reguraly or using the events system of the LibDS.
  */
-char* DS_GetAppliedFMSAddress (void)
+char* DS_GetDefaultFMSAddress (void)
 {
-    if (DS_StrEmpty (&custom_fms_address))
-        return DS_GetDefaultFMSAddress();
+    if (DS_CurrentProtocol()) {
+        DS_String address = DS_CurrentProtocol()->fms_address();
+        return DS_StrToChar (&address);
+    }
+
     else
-        return DS_GetCustomFMSAddress();
+        return DS_FallBackAddress;
 }
 
 /**
@@ -181,6 +167,20 @@ char* DS_GetAppliedRobotAddress (void)
         return DS_GetDefaultRobotAddress();
     else
         return DS_GetCustomRobotAddress();
+}
+
+/**
+ * Returns the address used to communicate with the FMS.
+ * If the user-set address is not empty, then this function will return the
+ * user-set address. Otherwise, this function will return the address
+ * specified  by the currently loaded protocol.
+ */
+char* DS_GetAppliedFMSAddress (void)
+{
+    if (DS_StrEmpty (&custom_fms_address))
+        return DS_GetDefaultFMSAddress();
+    else
+        return DS_GetCustomFMSAddress();
 }
 
 /**
@@ -462,26 +462,6 @@ void DS_SetControlMode (const DS_ControlMode mode)
 }
 
 /**
- * Changes the \a address used to communicate with the FMS
- */
-void DS_SetCustomFMSAddress (const char* address)
-{
-    assert (address);
-
-    if (strlen (address) > 0) {
-        DS_StrRmBuf (&custom_fms_address);
-        custom_fms_address = DS_StrNew (address);
-        CFG_ReconfigureAddresses (RECONFIGURE_FMS);
-    }
-
-    else {
-        DS_StrRmBuf (&custom_fms_address);
-        custom_fms_address = DS_StrNewLen (0);
-        CFG_ReconfigureAddresses (RECONFIGURE_FMS);
-    }
-}
-
-/**
  * Changes the \a address used to communicate with the radio
  */
 void DS_SetCustomRadioAddress (const char* address)
@@ -518,5 +498,25 @@ void DS_SetCustomRobotAddress (const char* address)
         DS_StrRmBuf (&custom_robot_address);
         custom_robot_address = DS_StrNewLen (0);
         CFG_ReconfigureAddresses (RECONFIGURE_ROBOT);
+    }
+}
+
+/**
+ * Changes the \a address used to communicate with the FMS
+ */
+void DS_SetCustomFMSAddress (const char* address)
+{
+    assert (address);
+
+    if (strlen (address) > 0) {
+        DS_StrRmBuf (&custom_fms_address);
+        custom_fms_address = DS_StrNew (address);
+        CFG_ReconfigureAddresses (RECONFIGURE_FMS);
+    }
+
+    else {
+        DS_StrRmBuf (&custom_fms_address);
+        custom_fms_address = DS_StrNewLen (0);
+        CFG_ReconfigureAddresses (RECONFIGURE_FMS);
     }
 }

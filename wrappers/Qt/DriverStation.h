@@ -86,15 +86,15 @@ class DriverStation : public QObject
                 READ teamPosition
                 WRITE setTeamPosition
                 NOTIFY positionChanged)
-    Q_PROPERTY (bool connectedToFMS
-                READ connectedToFMS
-                NOTIFY fmsCommunicationsChanged)
     Q_PROPERTY (bool connectedToRadio
                 READ connectedToRadio
                 NOTIFY radioCommunicationsChanged)
     Q_PROPERTY (bool connectedToRobot
                 READ connectedToRobot
                 NOTIFY robotCommunicationsChanged)
+    Q_PROPERTY (bool connectedToFMS
+                READ connectedToFMS
+                NOTIFY fmsCommunicationsChanged)
     Q_PROPERTY (bool emergencyStop
                 READ emergencyStopped
                 WRITE setEmergencyStopped
@@ -102,36 +102,36 @@ class DriverStation : public QObject
     Q_PROPERTY (QString voltageString
                 READ voltageString
                 NOTIFY voltageChanged)
+    Q_PROPERTY (QString appliedRadioAddress
+                READ appliedRadioAddress
+                NOTIFY radioAddressChanged)
+    Q_PROPERTY (QString appliedRobotAddress
+                READ appliedRobotAddress
+                NOTIFY robotAddressChanged)
     Q_PROPERTY (QString appliedFMSAddress
                 READ appliedFMSAddress
                 NOTIFY fmsAddressChanged)
-    Q_PROPERTY (QString appliedRadioAddress
-                READ appliedRadioAddress
-                NOTIFY robotAddressChanged)
-    Q_PROPERTY (QString appliedRobotAddress
-                READ appliedRobotAddress
+    Q_PROPERTY (QString defaultRadioAddress
+                READ defaultRadioAddress
+                NOTIFY radioAddressChanged)
+    Q_PROPERTY (QString defaultRobotAddress
+                READ defaultRobotAddress
                 NOTIFY robotAddressChanged)
     Q_PROPERTY (QString defaultFMSAddress
                 READ defaultFMSAddress
                 NOTIFY fmsAddressChanged)
-    Q_PROPERTY (QString defaultRadioAddress
-                READ defaultRadioAddress
-                NOTIFY robotAddressChanged)
-    Q_PROPERTY (QString defaultRobotAddress
-                READ defaultRobotAddress
+    Q_PROPERTY (QString customRadioAddress
+                READ customRadioAddress
+                WRITE setCustomRadioAddress
+                NOTIFY radioAddressChanged)
+    Q_PROPERTY (QString customRobotAddress
+                READ customRobotAddress
+                WRITE setCustomRobotAddress
                 NOTIFY robotAddressChanged)
     Q_PROPERTY (QString customFMSAddress
                 READ customFMSAddress
                 WRITE setCustomFMSAddress
                 NOTIFY fmsAddressChanged)
-    Q_PROPERTY (QString customRadioAddress
-                READ customRadioAddress
-                WRITE setCustomRadioAddress
-                NOTIFY robotAddressChanged)
-    Q_PROPERTY (QString customRobotAddress
-                READ customRobotAddress
-                WRITE setCustomRobotAddress
-                NOTIFY robotAddressChanged)
     Q_PROPERTY (QString elapsedTime
                 READ elapsedTime
                 NOTIFY elapsedTimeChanged)
@@ -150,12 +150,12 @@ class DriverStation : public QObject
     Q_PROPERTY (QString buildTime
                 READ buildTime
                 CONSTANT)
-    Q_PROPERTY (int fmsPacketLoss
-                READ fmsPacketLoss)
     Q_PROPERTY (int radioPacketLoss
                 READ radioPacketLoss)
     Q_PROPERTY (int robotPacketLoss
                 READ robotPacketLoss)
+    Q_PROPERTY (int fmsPacketLoss
+                READ fmsPacketLoss)
     Q_PROPERTY (bool isTestMode
                 READ isTestMode
                 NOTIFY controlModeChanged)
@@ -229,9 +229,9 @@ public:
     int ramUsage() const;
     int diskUsage() const;
 
-    int fmsPacketLoss() const;
     int radioPacketLoss() const;
     int robotPacketLoss() const;
+    int fmsPacketLoss() const;
 
     bool isEnabled() const;
     bool isTestMode() const;
@@ -239,9 +239,9 @@ public:
     bool hasRobotCode() const;
     bool isAutonomous() const;
     bool isTeleoperated() const;
-    bool connectedToFMS() const;
     bool connectedToRadio() const;
     bool connectedToRobot() const;
+    bool connectedToFMS() const;
     bool emergencyStopped() const;
 
     qreal voltage() const;
@@ -255,33 +255,33 @@ public:
 
     QString gameData() const;
 
-    QString appliedFMSAddress() const;
     QString appliedRadioAddress() const;
     QString appliedRobotAddress() const;
+    QString appliedFMSAddress() const;
 
-    QString defaultFMSAddress() const;
     QString defaultRadioAddress() const;
     QString defaultRobotAddress() const;
+    QString defaultFMSAddress() const;
 
     QString elapsedTime();
     QString generalStatus() const;
-    QString customFMSAddress() const;
     QString customRadioAddress() const;
     QString customRobotAddress() const;
+    QString customFMSAddress() const;
 
     QStringList stations() const;
     QStringList protocols() const;
 
-    Q_INVOKABLE unsigned long sentFMSUDPBytes() const;
-    Q_INVOKABLE unsigned long sentFMSTCPBytes() const;
     Q_INVOKABLE unsigned long sentRadioBytes() const;
     Q_INVOKABLE unsigned long sentRobotUDPBytes() const;
     Q_INVOKABLE unsigned long sentRobotTCPBytes() const;
-    Q_INVOKABLE unsigned long receivedFMSUDPBytes() const;
-    Q_INVOKABLE unsigned long receivedFMSTCPBytes() const;
+    Q_INVOKABLE unsigned long sentFMSUDPBytes() const;
+    Q_INVOKABLE unsigned long sentFMSTCPBytes() const;
     Q_INVOKABLE unsigned long receivedRadioBytes() const;
     Q_INVOKABLE unsigned long receivedRobotUDPBytes() const;
     Q_INVOKABLE unsigned long receivedRobotTCPBytes() const;
+    Q_INVOKABLE unsigned long receivedFMSUDPBytes() const;
+    Q_INVOKABLE unsigned long receivedFMSTCPBytes() const;
 
     Q_INVOKABLE int getNumAxes (const int joystick) const;
     Q_INVOKABLE int getNumHats (const int joystick) const;
@@ -302,9 +302,9 @@ public slots:
     void setTeamAlliance (const Alliance alliance);
     void setTeamPosition (const Position position);
     void setEmergencyStopped (const bool stopped);
-    void setCustomFMSAddress (const QString& address);
     void setCustomRadioAddress (const QString& address);
     void setCustomRobotAddress (const QString& address);
+    void setCustomFMSAddress (const QString& address);
 
     void addJoystick (int axes, int hats, int buttons);
     void setJoystickHat (int joystick, int hat, int angle);
@@ -324,9 +324,9 @@ signals:
     void stationChanged();
     void gameDataChanged();
     void protocolChanged();
-    void fmsAddressChanged();
     void radioAddressChanged();
     void robotAddressChanged();
+    void fmsAddressChanged();
     void joystickCountChanged();
     void canUsageChanged (const int usage);
     void cpuUsageChanged (const int usage);
@@ -342,9 +342,9 @@ signals:
     void allianceChanged (const Alliance alliance);
     void positionChanged (const Position position);
     void elapsedTimeChanged (const QString& string);
-    void fmsCommunicationsChanged (const bool connected);
     void radioCommunicationsChanged (const bool connected);
     void robotCommunicationsChanged (const bool connected);
+    void fmsCommunicationsChanged (const bool connected);
     void emergencyStoppedChanged (const bool emergencyStopped);
 
 private:

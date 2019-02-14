@@ -44,9 +44,9 @@ static int robot_enabled = -1;
 static int can_utilization = -1;
 static float robot_voltage = -1;
 static int emergency_stopped = -1;
-static int fms_communications = -1;
 static int radio_communications = -1;
 static int robot_communications = -1;
+static int fms_communications = -1;
 static DS_Position robot_position = DS_POSITION_1;
 static DS_Alliance robot_alliance = DS_ALLIANCE_RED;
 static DS_ControlMode control_mode = DS_CONTROL_TELEOPERATED;
@@ -137,7 +137,7 @@ void CFG_AddNetConsoleMessage (const DS_String* msg)
 }
 
 /**
- * Re-applies the network addresses of the FMS, radio and robot.
+ * Re-applies the network addresses of the radio, robot, and FMS.
  * This function is called when the team number is changed or when a watchdog
  * expires (to force the sockets module to perform a lookup)
  */
@@ -145,13 +145,6 @@ void CFG_ReconfigureAddresses (const int flags)
 {
     if (!DS_CurrentProtocol())
         return;
-
-    if (flags & RECONFIGURE_FMS) {
-        char* address = DS_GetAppliedFMSAddress();
-        DS_SocketChangeAddress (&DS_CurrentProtocol()->fms_udp_socket, address);
-        DS_SocketChangeAddress (&DS_CurrentProtocol()->fms_tcp_socket, address);
-        DS_FREE (address);
-    }
 
     if (flags & RECONFIGURE_RADIO) {
         char* address = DS_GetAppliedRadioAddress();
@@ -163,6 +156,13 @@ void CFG_ReconfigureAddresses (const int flags)
         char* address = DS_GetAppliedRobotAddress();
         DS_SocketChangeAddress (&DS_CurrentProtocol()->robot_udp_socket, address);
         DS_SocketChangeAddress (&DS_CurrentProtocol()->robot_tcp_socket, address);
+        DS_FREE (address);
+    }
+
+    if (flags & RECONFIGURE_FMS) {
+        char* address = DS_GetAppliedFMSAddress();
+        DS_SocketChangeAddress (&DS_CurrentProtocol()->fms_udp_socket, address);
+        DS_SocketChangeAddress (&DS_CurrentProtocol()->fms_tcp_socket, address);
         DS_FREE (address);
     }
 }
@@ -270,15 +270,6 @@ int CFG_GetEmergencyStopped (void)
 }
 
 /**
- * Returns \c 1 if the client has communications with the FMS, otherwise,
- * it returns \c 0
- */
-int CFG_GetFMSCommunications (void)
-{
-    return fms_communications == 1;
-}
-
-/**
  * Returns \c 1 if the client has communications with the radio, otherwise,
  * it returns \c 0
  */
@@ -294,6 +285,15 @@ int CFG_GetRadioCommunications (void)
 int CFG_GetRobotCommunications (void)
 {
     return robot_communications == 1;
+}
+
+/**
+ * Returns \c 1 if the client has communications with the FMS, otherwise,
+ * it returns \c 0
+ */
+int CFG_GetFMSCommunications (void)
+{
+    return fms_communications == 1;
 }
 
 /**
@@ -460,24 +460,6 @@ void CFG_SetControlMode (const DS_ControlMode mode)
 }
 
 /**
- * Updates the state of the FMS communications.
- */
-void CFG_SetFMSCommunications (const int communications)
-{
-    if (fms_communications != to_boolean (communications)) {
-        fms_communications = to_boolean (communications);
-
-        DS_Event event;
-        event.fms.type = DS_FMS_COMMS_CHANGED;
-        event.fms.connected = fms_communications;
-        DS_AddEvent (&event);
-
-        DS_ResetFMSUDPPackets();
-        DS_ResetFMSTCPPackets();
-    }
-}
-
-/**
  * Updates the state of the radio communications.
  */
 void CFG_SetRadioCommunications (const int communications)
@@ -487,7 +469,7 @@ void CFG_SetRadioCommunications (const int communications)
 
         DS_Event event;
         event.radio.type = DS_RADIO_COMMS_CHANGED;
-        event.radio.connected = fms_communications;
+        event.radio.connected = radio_communications;
         DS_AddEvent (&event);
 
         DS_ResetRadioPackets();
@@ -510,12 +492,21 @@ void CFG_SetRobotCommunications (const int communications)
 }
 
 /**
- * Called when the FMS watchdog expires
+ * Updates the state of the FMS communications.
  */
-void CFG_FMSWatchdogExpired (void)
+void CFG_SetFMSCommunications (const int communications)
 {
-    CFG_SetFMSCommunications (0);
-    CFG_ReconfigureAddresses (RECONFIGURE_FMS);
+    if (fms_communications != to_boolean (communications)) {
+        fms_communications = to_boolean (communications);
+
+        DS_Event event;
+        event.fms.type = DS_FMS_COMMS_CHANGED;
+        event.fms.connected = fms_communications;
+        DS_AddEvent (&event);
+
+        DS_ResetFMSUDPPackets();
+        DS_ResetFMSTCPPackets();
+    }
 }
 
 /**
@@ -547,4 +538,13 @@ void CFG_RobotWatchdogExpired (void)
 
     /* Update the status label */
     create_robot_event (DS_STATUS_STRING_CHANGED);
+}
+
+/**
+ * Called when the FMS watchdog expires
+ */
+void CFG_FMSWatchdogExpired (void)
+{
+    CFG_SetFMSCommunications (0);
+    CFG_ReconfigureAddresses (RECONFIGURE_FMS);
 }

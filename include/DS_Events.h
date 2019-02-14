@@ -36,8 +36,8 @@ extern "C" {
  */
 typedef enum {
     DS_NULL_EVENT               = 0x00,
-    DS_FMS_COMMS_CHANGED        = 0x01,
-    DS_RADIO_COMMS_CHANGED      = 0x03,
+    DS_RADIO_COMMS_CHANGED      = 0x01,
+    DS_FMS_COMMS_CHANGED        = 0x03,
     DS_JOYSTICK_COUNT_CHANGED   = 0x05,
     DS_NETCONSOLE_NEW_MESSAGE   = 0x06,
     DS_ROBOT_ENABLED_CHANGED    = 0x07,
@@ -55,14 +55,6 @@ typedef enum {
     DS_ROBOT_ESTOP_CHANGED      = 0x17,
     DS_STATUS_STRING_CHANGED    = 0x18,
 } DS_EventType;
-
-/**
- * \brief FMS event fields
- */
-typedef struct {
-    DS_EventType type;
-    int connected;
-} DS_FMSEvent;
 
 /**
  * \brief Radio event fields
@@ -88,6 +80,14 @@ typedef struct {
     float voltage;
     DS_ControlMode mode;
 } DS_RobotEvent;
+
+/**
+ * \brief FMS event fields
+ */
+typedef struct {
+    DS_EventType type;
+    int connected;
+} DS_FMSEvent;
 
 /**
  * \brief Joystick event fields

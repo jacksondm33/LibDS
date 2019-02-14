@@ -78,20 +78,6 @@ int DriverStation::diskUsage() const
 }
 
 /**
- * Returns the packet loss percentage between the FMS and the client
- */
-int DriverStation::fmsPacketLoss() const
-{
-    qreal sent = (qreal) DS_SentFMSUDPPackets();
-    qreal recv = (qreal) DS_ReceivedFMSUDPPackets();
-
-    if (sent > 0)
-        return (1 - (recv / sent)) * 100;
-
-    return 100;
-}
-
-/**
  * Returns the packet loss percentage between the radio and the client
  */
 int DriverStation::radioPacketLoss() const
@@ -112,6 +98,20 @@ int DriverStation::robotPacketLoss() const
 {
     qreal sent = (qreal) DS_SentRobotUDPPackets();
     qreal recv = (qreal) DS_ReceivedRobotUDPPackets();
+
+    if (sent > 0)
+        return (1 - (recv / sent)) * 100;
+
+    return 100;
+}
+
+/**
+ * Returns the packet loss percentage between the FMS and the client
+ */
+int DriverStation::fmsPacketLoss() const
+{
+    qreal sent = (qreal) DS_SentFMSUDPPackets();
+    qreal recv = (qreal) DS_ReceivedFMSUDPPackets();
 
     if (sent > 0)
         return (1 - (recv / sent)) * 100;
@@ -223,14 +223,6 @@ bool DriverStation::isTeleoperated() const
 }
 
 /**
- * Returns \c true if the Driver Station has communications with the FMS
- */
-bool DriverStation::connectedToFMS() const
-{
-    return DS_GetFMSCommunications();
-}
-
-/**
  * Returns \c true if the Driver Station has communications with the robot radio
  */
 bool DriverStation::connectedToRadio() const
@@ -244,6 +236,14 @@ bool DriverStation::connectedToRadio() const
 bool DriverStation::connectedToRobot() const
 {
     return DS_GetRobotCommunications();
+}
+
+/**
+ * Returns \c true if the Driver Station has communications with the FMS
+ */
+bool DriverStation::connectedToFMS() const
+{
+    return DS_GetFMSCommunications();
 }
 
 /**
@@ -442,15 +442,6 @@ QString DriverStation::gameData() const
 
 /**
  * Returns the internet address that the Driver Station is using to communicate
- * with the Field Management System.
- */
-QString DriverStation::appliedFMSAddress() const
-{
-    return QString::fromUtf8 (DS_GetAppliedFMSAddress());
-}
-
-/**
- * Returns the internet address that the Driver Station is using to communicate
  * with the robot radio.
  */
 QString DriverStation::appliedRadioAddress() const
@@ -468,11 +459,12 @@ QString DriverStation::appliedRobotAddress() const
 }
 
 /**
- * Returns the FMS address recommended by the loaded protocol
+ * Returns the internet address that the Driver Station is using to communicate
+ * with the Field Management System.
  */
-QString DriverStation::defaultFMSAddress() const
+QString DriverStation::appliedFMSAddress() const
 {
-    return QString::fromUtf8 (DS_GetDefaultFMSAddress());
+    return QString::fromUtf8 (DS_GetAppliedFMSAddress());
 }
 
 /**
@@ -489,6 +481,14 @@ QString DriverStation::defaultRadioAddress() const
 QString DriverStation::defaultRobotAddress() const
 {
     return QString::fromUtf8 (DS_GetDefaultRobotAddress());
+}
+
+/**
+ * Returns the FMS address recommended by the loaded protocol
+ */
+QString DriverStation::defaultFMSAddress() const
+{
+    return QString::fromUtf8 (DS_GetDefaultFMSAddress());
 }
 
 /**
@@ -521,15 +521,6 @@ QString DriverStation::generalStatus() const
 }
 
 /**
- * Returns the user-set FMS address, use the \c setCustomFMSAddress() function
- * to change this value.
- */
-QString DriverStation::customFMSAddress() const
-{
-    return QString::fromUtf8 (DS_GetCustomFMSAddress());
-}
-
-/**
  * Returns the user-set radio address, use the \c setCustomRadioAddress()
  * function to change this value.
  */
@@ -545,6 +536,15 @@ QString DriverStation::customRadioAddress() const
 QString DriverStation::customRobotAddress() const
 {
     return QString::fromUtf8 (DS_GetCustomRobotAddress());
+}
+
+/**
+ * Returns the user-set FMS address, use the \c setCustomFMSAddress() function
+ * to change this value.
+ */
+QString DriverStation::customFMSAddress() const
+{
+    return QString::fromUtf8 (DS_GetCustomFMSAddress());
 }
 
 /**
@@ -581,24 +581,6 @@ QStringList DriverStation::protocols() const
 }
 
 /**
- * Returns the number of sent FMS (UDP) bytes since the current
- * protocol was loaded
- */
-unsigned long DriverStation::sentFMSUDPBytes() const
-{
-    return DS_SentFMSUDPBytes();
-}
-
-/**
- * Returns the number of sent FMS (TCP) bytes since the current
- * protocol was loaded
- */
-unsigned long DriverStation::sentFMSTCPBytes() const
-{
-    return DS_SentFMSTCPBytes();
-}
-
-/**
  * Returns the number of sent radio bytes since the current
  * protocol was loaded
  */
@@ -626,21 +608,21 @@ unsigned long DriverStation::sentRobotTCPBytes() const
 }
 
 /**
- * Returns the number of received FMS (UDP) bytes since the current
+ * Returns the number of sent FMS (UDP) bytes since the current
  * protocol was loaded
  */
-unsigned long DriverStation::receivedFMSUDPBytes() const
+unsigned long DriverStation::sentFMSUDPBytes() const
 {
-    return DS_ReceivedFMSUDPBytes();
+    return DS_SentFMSUDPBytes();
 }
 
 /**
- * Returns the number of received FMS (TCP) bytes since the current
+ * Returns the number of sent FMS (TCP) bytes since the current
  * protocol was loaded
  */
-unsigned long DriverStation::receivedFMSTCPBytes() const
+unsigned long DriverStation::sentFMSTCPBytes() const
 {
-    return DS_ReceivedFMSTCPBytes();
+    return DS_SentFMSTCPBytes();
 }
 
 /**
@@ -668,6 +650,24 @@ unsigned long DriverStation::receivedRobotUDPBytes() const
 unsigned long DriverStation::receivedRobotTCPBytes() const
 {
     return DS_ReceivedRobotTCPBytes();
+}
+
+/**
+ * Returns the number of received FMS (UDP) bytes since the current
+ * protocol was loaded
+ */
+unsigned long DriverStation::receivedFMSUDPBytes() const
+{
+    return DS_ReceivedFMSUDPBytes();
+}
+
+/**
+ * Returns the number of received FMS (TCP) bytes since the current
+ * protocol was loaded
+ */
+unsigned long DriverStation::receivedFMSTCPBytes() const
+{
+    return DS_ReceivedFMSTCPBytes();
 }
 
 /**
@@ -763,9 +763,9 @@ void DriverStation::setTeamNumber (const int number)
     LOG << "Changing team number to" << number;
     DS_SetTeamNumber (number);
 
-    emit fmsAddressChanged();
     emit radioAddressChanged();
     emit robotAddressChanged();
+    emit fmsAddressChanged();
     emit teamNumberChanged (number);
 }
 
@@ -788,9 +788,9 @@ void DriverStation::loadProtocol (const DS_Protocol& protocol)
 {
     DS_ConfigureProtocol (&protocol);
 
-    setCustomFMSAddress (customFMSAddress());
     setCustomRadioAddress (customRadioAddress());
     setCustomRobotAddress (customRobotAddress());
+    setCustomFMSAddress (customFMSAddress());
 
     emit protocolChanged();
     emit statusChanged (QString::fromUtf8 (DS_GetStatusString()));
@@ -940,17 +940,6 @@ void DriverStation::setEmergencyStopped (const bool stopped)
 }
 
 /**
- * Forces the LibDS to use the given \a address to communicate with the FMS
- */
-void DriverStation::setCustomFMSAddress (const QString& address)
-{
-    LOG << "Using new FMS address" << getAddress (address);
-    DS_SetCustomFMSAddress (getAddress (address).toStdString().c_str());
-
-    emit fmsAddressChanged();
-}
-
-/**
  * Forces the LibDS to use the given \a address to communicate with the radio
  */
 void DriverStation::setCustomRadioAddress (const QString& address)
@@ -969,6 +958,17 @@ void DriverStation::setCustomRobotAddress (const QString& address)
     LOG << "Using new robot address" << getAddress (address);
     DS_SetCustomRobotAddress (getAddress (address).toStdString().c_str());
     emit robotAddressChanged();
+}
+
+/**
+ * Forces the LibDS to use the given \a address to communicate with the FMS
+ */
+void DriverStation::setCustomFMSAddress (const QString& address)
+{
+    LOG << "Using new FMS address" << getAddress (address);
+    DS_SetCustomFMSAddress (getAddress (address).toStdString().c_str());
+
+    emit fmsAddressChanged();
 }
 
 /**
@@ -1050,13 +1050,13 @@ void DriverStation::processEvents()
     DS_Event event;
     while (DS_PollEvent (&event)) {
         switch (event.type) {
-        case DS_FMS_COMMS_CHANGED:
-            emit fmsAddressChanged();
-            emit fmsCommunicationsChanged (event.fms.connected);
-            break;
         case DS_RADIO_COMMS_CHANGED:
             emit radioAddressChanged();
             emit radioCommunicationsChanged (event.radio.connected);
+            break;
+        case DS_FMS_COMMS_CHANGED:
+            emit fmsAddressChanged();
+            emit fmsCommunicationsChanged (event.fms.connected);
             break;
         case DS_NETCONSOLE_NEW_MESSAGE:
             emit newMessage (QString::fromUtf8 (event.netconsole.message));
