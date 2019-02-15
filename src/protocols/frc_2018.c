@@ -844,7 +844,7 @@ DS_Protocol DS_GetProtocolFRC_2018 (void)
     /* Define robot (TCP) socket properties */
     protocol.robot_tcp_socket = *DS_SocketEmpty();
     protocol.robot_tcp_socket.disabled = 0;
-    protocol.robot_tcp_socket.in_port = 1740;
+    protocol.robot_tcp_socket.in_port = 1780;
     protocol.robot_tcp_socket.out_port = 1740;
     protocol.robot_tcp_socket.type = DS_SOCKET_TCP;
 
@@ -858,7 +858,7 @@ DS_Protocol DS_GetProtocolFRC_2018 (void)
     /* Define FMS (TCP) socket properties */
     protocol.fms_tcp_socket = *DS_SocketEmpty();
     protocol.fms_tcp_socket.disabled = 0;
-    protocol.fms_tcp_socket.in_port = 1750;
+    protocol.fms_tcp_socket.in_port = 1790;
     protocol.fms_tcp_socket.out_port = 1750;
     protocol.fms_tcp_socket.type = DS_SOCKET_TCP;
 
