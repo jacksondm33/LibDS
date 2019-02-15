@@ -837,28 +837,28 @@ DS_Protocol DS_GetProtocolFRC_2018 (void)
     /* Define robot (UDP) socket properties */
     protocol.robot_udp_socket = *DS_SocketEmpty();
     protocol.robot_udp_socket.disabled = 0;
-    protocol.robot_udp_socket.in_port = 1095;
+    protocol.robot_udp_socket.in_port = 1150;
     protocol.robot_udp_socket.out_port = 1110;
     protocol.robot_udp_socket.type = DS_SOCKET_UDP;
 
     /* Define robot (TCP) socket properties */
     protocol.robot_tcp_socket = *DS_SocketEmpty();
     protocol.robot_tcp_socket.disabled = 0;
-    protocol.robot_tcp_socket.in_port = 1725;
+    protocol.robot_tcp_socket.in_port = 1740;
     protocol.robot_tcp_socket.out_port = 1740;
     protocol.robot_tcp_socket.type = DS_SOCKET_TCP;
 
     /* Define FMS (UDP) socket properties */
     protocol.fms_udp_socket = *DS_SocketEmpty();
     protocol.fms_udp_socket.disabled = 0;
-    protocol.fms_udp_socket.in_port = 1145;
+    protocol.fms_udp_socket.in_port = 1121;
     protocol.fms_udp_socket.out_port = 1160;
     protocol.fms_udp_socket.type = DS_SOCKET_UDP;
 
     /* Define FMS (TCP) socket properties */
     protocol.fms_tcp_socket = *DS_SocketEmpty();
     protocol.fms_tcp_socket.disabled = 0;
-    protocol.fms_tcp_socket.in_port = 1735;
+    protocol.fms_tcp_socket.in_port = 1750;
     protocol.fms_tcp_socket.out_port = 1750;
     protocol.fms_tcp_socket.type = DS_SOCKET_TCP;
 
