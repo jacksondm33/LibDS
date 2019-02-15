@@ -355,15 +355,6 @@ void DSEventLogger::onRobotCodeChanged (bool robotCode)
 }
 
 /**
- * Called when the DS reports a change in the FMS communications status
- */
-void DSEventLogger::onFMSCommunicationsChanged (bool connected)
-{
-    LOG << "FMS communications set to" << connected;
-    m_fmsCommsLog.append (qMakePair<qint64, bool> (currentTime(), connected));
-}
-
-/**
  * Called when the DS reports a change in the radio communications status
  */
 void DSEventLogger::onRadioCommunicationsChanged (bool connected)
@@ -379,6 +370,15 @@ void DSEventLogger::onRobotCommunicationsChanged (bool connected)
 {
     LOG << "Robot communications set to" << connected;
     m_robotCommsLog.append (qMakePair<qint64, bool> (currentTime(), connected));
+}
+
+/**
+ * Called when the DS reports a change in the FMS communications status
+ */
+void DSEventLogger::onFMSCommunicationsChanged (bool connected)
+{
+    LOG << "FMS communications set to" << connected;
+    m_fmsCommsLog.append (qMakePair<qint64, bool> (currentTime(), connected));
 }
 
 /**
@@ -450,12 +450,12 @@ void DSEventLogger::connectSlots()
              this, &DSEventLogger::onVoltageChanged);
     connect (ds,   &DriverStation::robotCodeChanged,
              this, &DSEventLogger::onRobotCodeChanged);
-    connect (ds,   &DriverStation::fmsCommunicationsChanged,
-             this, &DSEventLogger::onFMSCommunicationsChanged);
     connect (ds,   &DriverStation::radioCommunicationsChanged,
              this, &DSEventLogger::onRadioCommunicationsChanged);
     connect (ds,   &DriverStation::robotCommunicationsChanged,
              this, &DSEventLogger::onRobotCommunicationsChanged);
+    connect (ds,   &DriverStation::fmsCommunicationsChanged,
+             this, &DSEventLogger::onFMSCommunicationsChanged);
     connect (ds,   &DriverStation::emergencyStoppedChanged,
              this, &DSEventLogger::onEmergencyStoppedChanged);
     connect (ds,   &DriverStation::controlModeChanged,

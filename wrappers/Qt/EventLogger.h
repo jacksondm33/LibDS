@@ -60,9 +60,9 @@ private slots:
     void onTeamNumberChanged (int number);
     void onVoltageChanged (float voltage);
     void onRobotCodeChanged (bool robotCode);
-    void onFMSCommunicationsChanged (bool connected);
     void onRadioCommunicationsChanged (bool connected);
     void onRobotCommunicationsChanged (bool connected);
+    void onFMSCommunicationsChanged (bool connected);
     void onEmergencyStoppedChanged (bool emergencyStopped);
     void onControlModeChanged (DriverStation::Control mode);
     void onAllianceChanged (DriverStation::Alliance alliance);
@@ -85,10 +85,10 @@ private:
     QList<QPair<qint64, bool>> m_enabledLog;
     QList<QPair<qint64, int>> m_diskUsageLog;
     QList<QPair<qint64, float>> m_voltageLog;
-    QList<QPair<qint64, bool>> m_fmsCommsLog;
     QList<QPair<qint64, bool>> m_robotCodeLog;
     QList<QPair<qint64, bool>> m_radioCommsLog;
     QList<QPair<qint64, bool>> m_robotCommsLog;
+    QList<QPair<qint64, bool>> m_fmsCommsLog;
     QList<QPair<qint64, int>> m_controlModeLog;
     QList<QPair<qint64, QString>> m_messagesLog;
     QList<QPair<qint64, bool>> m_emergencyStopLog;
