@@ -87,7 +87,6 @@ extern void DS_SetControlMode (const DS_ControlMode mode);
 extern void DS_SetCustomRadioAddress (const char* address);
 extern void DS_SetCustomRobotAddress (const char* address);
 extern void DS_SetCustomFMSAddress (const char* address);
-extern void DS_SendNetConsoleMessage (const char* message);
 
 #ifdef __cplusplus
 }
