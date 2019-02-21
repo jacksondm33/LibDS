@@ -653,13 +653,34 @@ static int read_robot_tcp_packet (const DS_String* data)
     if (!data)
         return 0;
 
-    /* Packet is too small */
-    if (DS_StrLen (data) < 1)
-        return 0;
+    int pos = 0;
 
-    uint16_t size = (uint16_t) DS_StrCharAt (data, 0) << 8 | (uint16_t) DS_StrCharAt (data, 1);
-
-    uint8_t id = (uint8_t) DS_StrCharAt (data, 2);
+    while (pos < DS_StrLen (data))
+    {
+        uint16_t tag_length = (uint16_t) DS_StrCharAt (data, 0) << 8 | (uint16_t) DS_StrCharAt (data, 1);
+        uint8_t tag_id = (uint8_t) DS_StrCharAt (data, 2);
+        switch (tag_id)
+        {
+        case 00:
+            break;
+        case 01:
+            break;
+        case 04:
+            break;
+        case 05:
+            break;
+        case 10:
+            break;
+        case 11:
+            break;
+        case 12:
+            break;
+        case 13:
+            break;
+        default:
+            break;
+        }
+    }
 
     /* Read message */
     DS_String message = DS_StrNewLen (DS_StrLen (data) - 10);
