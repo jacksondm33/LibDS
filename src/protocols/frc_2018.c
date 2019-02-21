@@ -655,31 +655,38 @@ static int read_robot_tcp_packet (const DS_String* data)
 
     int pos = 0;
 
-    while (pos < DS_StrLen (data))
-    {
-        uint16_t tag_length = (uint16_t) DS_StrCharAt (data, 0) << 8 | (uint16_t) DS_StrCharAt (data, 1);
-        uint8_t tag_id = (uint8_t) DS_StrCharAt (data, 2);
-        switch (tag_id)
-        {
-        case 00:
-            break;
-        case 01:
-            break;
-        case 04:
-            break;
-        case 05:
-            break;
-        case 10:
-            break;
-        case 11:
-            break;
-        case 12:
-            break;
-        case 13:
-            break;
-        default:
-            break;
+    while (pos < DS_StrLen (data)) {
+        uint16_t tag_length = (uint16_t) DS_StrCharAt (data, pos) << 8 | (uint16_t) DS_StrCharAt (data,
+                              pos + 1);
+        uint8_t tag_id = (uint8_t) DS_StrCharAt (data, pos + 2);
+        pos += 3;
+        if (tag_id == 0x00) {
+        } else if (tag_id == 0x01) {
+        } else if (tag_id == 0x04) {
+        } else if (tag_id == 0x05) {
+        } else if (tag_id == 0x0a) {
+            /* Get name string */
+            uint8_t name_length = (uint8_t) DS_StrCharAt (data, pos + 4);
+            DS_String name = DS_StrDup (data);
+            DS_StrSubStr (&name, pos + 5, name_length);
+            /* Get version string */
+            uint8_t version_length = (uint8_t) DS_StrCharAt (data, pos + 4 + name_length);
+            DS_String version = DS_StrDup (data);
+            DS_StrSubStr (&version, pos + 5 + name_length, version_length);
+            /* Join strings */
+            DS_StrJoinCStr (&name, ": ");
+            DS_StrJoin (&name, &version);
+            /* Add to netconsole */
+            CFG_AddNetConsoleMessage (&name);
+        } else if (tag_id == 0x0b) {
+        } else if (tag_id == 0x0c) {
+            /* Get message string */
+            DS_String message = DS_StrDup (data);
+            DS_StrSubStr (&message, pos + 6, tag_length - 7);
+            /* Add to netconsole */
+            CFG_AddNetConsoleMessage (&message);
         }
+        pos += tag_length - 1;
     }
 
     /* Read message */

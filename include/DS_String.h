@@ -54,6 +54,7 @@ extern int DS_StrCompare (const DS_String* a, const DS_String* b);
  */
 extern int DS_StrRmBuf (DS_String* string);
 extern int DS_StrResize (DS_String* string, size_t size);
+extern int DS_StrSubStr (DS_String* string, int pos, int size);
 extern int DS_StrAppend (DS_String* string, const uint8_t byte);
 extern int DS_StrJoin (DS_String* first, const DS_String* second);
 extern int DS_StrJoinCStr (DS_String* string, const char* cstring);

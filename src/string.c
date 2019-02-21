@@ -159,6 +159,47 @@ int DS_StrResize (DS_String* string, size_t size)
 }
 
 /**
+ * Creates substring of the given \a string from the given \a pos with the given \a size
+ *
+ * \param string the original string structure
+ * \param pos the starting position
+ * \param size the size from the starting position
+ */
+int DS_StrSubStr (DS_String* string, int pos, int size)
+{
+    /* Check arguments */
+    assert (string);
+    assert (string->buf);
+
+    /* Initialize variables */
+    int i;
+    int oldSize = (int) string->len;
+
+    /* Copy old buffer */
+    char* copy = calloc (oldSize, sizeof (char));
+    for (i = 0; i < oldSize; ++i)
+        copy [i] = string->buf [i];
+
+    /* Re-initialize the buffer */
+    free (string->buf);
+    string->buf = calloc (size, sizeof (char));
+
+    /* Copy old buffer into start of new buffer */
+    if (string->buf) {
+        string->len = size;
+        for (i = 0; i < size; ++i)
+            string->buf [i] = copy [i + pos];
+
+        free (copy);
+        return DS_STR_SUCCESS;
+    }
+
+    /* Could not initialize the buffer, restore data */
+    string->buf = copy;
+    return DS_STR_FAILURE;
+}
+
+/**
  * Appends the given \a byte to the end of the given \a string
  *
  * \param string the original string
