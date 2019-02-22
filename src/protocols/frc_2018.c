@@ -689,12 +689,6 @@ static int read_robot_tcp_packet (const DS_String* data)
         pos += tag_length - 1;
     }
 
-    /* Read message */
-    DS_String message = DS_StrNewLen (DS_StrLen (data) - 10);
-    for (int i = 10; i < DS_StrLen (data); i++)
-        DS_StrAppend (&message, DS_StrCharAt (data, i));
-    CFG_AddNetConsoleMessage (&message);
-
     return 1;
 }
 
