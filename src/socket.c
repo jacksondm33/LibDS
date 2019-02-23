@@ -133,8 +133,8 @@ static void* create_socket (void* data)
 
     /* Open TCP socket */
     if (ptr->type == DS_SOCKET_TCP) {
-        ptr->info.sock_in = create_server_tcp (ptr->info.in_service, SOCKY_IPv4, 0);
         ptr->info.sock_out = create_client_tcp (ptr->address, ptr->info.out_service, SOCKY_IPv4, 0);
+        ptr->info.sock_in = ptr->info.sock_out;
     }
 
     /* Open UDP socket */
