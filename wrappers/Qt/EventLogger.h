@@ -69,6 +69,7 @@ private slots:
     void onPositionChanged (DriverStation::Position position);
 
 private:
+    void logData (QJsonArray log, QJsonValue data);
     void saveData();
     void connectSlots();
     qint64 currentTime();
@@ -79,17 +80,17 @@ private:
     QString m_currentLog;
     QElapsedTimer m_timer;
 
-    QList<QPair<qint64, int>> m_canUsageLog;
-    QList<QPair<qint64, int>> m_cpuUsageLog;
-    QList<QPair<qint64, int>> m_ramUsageLog;
-    QList<QPair<qint64, bool>> m_enabledLog;
-    QList<QPair<qint64, int>> m_diskUsageLog;
-    QList<QPair<qint64, float>> m_voltageLog;
-    QList<QPair<qint64, bool>> m_robotCodeLog;
-    QList<QPair<qint64, bool>> m_radioCommsLog;
-    QList<QPair<qint64, bool>> m_robotCommsLog;
-    QList<QPair<qint64, bool>> m_fmsCommsLog;
-    QList<QPair<qint64, int>> m_controlModeLog;
-    QList<QPair<qint64, QString>> m_messagesLog;
-    QList<QPair<qint64, bool>> m_emergencyStopLog;
+    QJsonArray m_canUsageLog;
+    QJsonArray m_cpuUsageLog;
+    QJsonArray m_ramUsageLog;
+    QJsonArray m_enabledLog;
+    QJsonArray m_diskUsageLog;
+    QJsonArray m_voltageLog;
+    QJsonArray m_robotCodeLog;
+    QJsonArray m_radioCommsLog;
+    QJsonArray m_robotCommsLog;
+    QJsonArray m_fmsCommsLog;
+    QJsonArray m_controlModeLog;
+    QJsonArray m_messagesLog;
+    QJsonArray m_emergencyStopLog;
 };

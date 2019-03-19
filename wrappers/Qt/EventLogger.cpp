@@ -172,7 +172,7 @@ void DSEventLogger::handleMessage (const QtMsgType type, const QString& data)
 }
 
 /**
- * Prepares the log file for writting
+ * Prepares the log file for writing
  */
 void DSEventLogger::init()
 {
@@ -187,14 +187,14 @@ void DSEventLogger::init()
         QString ldsV = DriverStation::libDSVersion();
         QString time = GET_DATE_TIME ("MMM dd yyyy - HH:mm:ss AP");
 
-        /* Get dump directoru */
+        /* Get dump directory */
         QString path = QString ("%1/%2/%3/%4/")
                        .arg (logsPath())
                        .arg (GET_DATE_TIME ("yyyy"))
                        .arg (GET_DATE_TIME ("MMMM"))
                        .arg (GET_DATE_TIME ("ddd dd"));
 
-        /* Create logs directory (if necessesary) */
+        /* Create logs directory (if necessary) */
         QDir dir (path);
         if (!dir.exists())
             dir.mkpath (".");
@@ -274,13 +274,19 @@ void DSEventLogger::saveDataLoop()
     QTimer::singleShot (500, Qt::PreciseTimer, this, SLOT (saveDataLoop()));
 }
 
+void DSEventLogger::logData (QJsonArray log, QJsonValue data)
+{
+    log.append (QJsonObject ({qMakePair<QString, QJsonValue> ("time", QJsonValue (currentTime())),
+                              qMakePair<QString, QJsonValue> ("data", data)}));
+}
+
 /**
  * Called when the DS reports a change of the robot's CAN utilization
  */
 void DSEventLogger::onCANUsageChanged (int usage)
 {
     Q_UNUSED (usage);
-    m_canUsageLog.append (qMakePair<qint64, int> (currentTime(), usage));
+    logData (m_canUsageLog, QJsonValue (usage));
 }
 
 /**
@@ -289,7 +295,7 @@ void DSEventLogger::onCANUsageChanged (int usage)
 void DSEventLogger::onCPUUsageChanged (int usage)
 {
     Q_UNUSED (usage);
-    m_cpuUsageLog.append (qMakePair<qint64, int> (currentTime(), usage));
+    logData (m_cpuUsageLog, QJsonValue (usage));
 }
 
 /**
@@ -298,7 +304,7 @@ void DSEventLogger::onCPUUsageChanged (int usage)
 void DSEventLogger::onRAMUsageChanged (int usage)
 {
     Q_UNUSED (usage);
-    m_ramUsageLog.append (qMakePair<qint64, int> (currentTime(), usage));
+    logData (m_ramUsageLog, QJsonValue (usage));
 }
 
 /**
@@ -307,7 +313,7 @@ void DSEventLogger::onRAMUsageChanged (int usage)
 void DSEventLogger::onNewMessage (QString message)
 {
     Q_UNUSED (message);
-    m_messagesLog.append (qMakePair<qint64, QString> (currentTime(), message));
+    logData (m_messagesLog, QJsonValue (message));
 }
 
 /**
@@ -316,7 +322,7 @@ void DSEventLogger::onNewMessage (QString message)
 void DSEventLogger::onDiskUsageChanged (int usage)
 {
     Q_UNUSED (usage);
-    m_diskUsageLog.append (qMakePair<qint64, int> (currentTime(), usage));
+    logData (m_diskUsageLog, QJsonValue (usage));
 }
 
 /**
@@ -325,7 +331,7 @@ void DSEventLogger::onDiskUsageChanged (int usage)
 void DSEventLogger::onEnabledChanged (bool enabled)
 {
     LOG << "Robot enabled state set to" << enabled;
-    m_enabledLog.append (qMakePair<qint64, bool> (currentTime(), enabled));
+    logData (m_enabledLog, QJsonValue (enabled));
 }
 
 /**
@@ -342,7 +348,7 @@ void DSEventLogger::onTeamNumberChanged (int number)
 void DSEventLogger::onVoltageChanged (float voltage)
 {
     Q_UNUSED (voltage);
-    m_voltageLog.append (qMakePair<qint64, float> (currentTime(), voltage));
+    logData (m_voltageLog, QJsonValue (voltage));
 }
 
 /**
@@ -351,7 +357,7 @@ void DSEventLogger::onVoltageChanged (float voltage)
 void DSEventLogger::onRobotCodeChanged (bool robotCode)
 {
     LOG << "Robot code status set to" << robotCode;
-    m_robotCodeLog.append (qMakePair<qint64, bool> (currentTime(), robotCode));
+    logData (m_robotCodeLog, QJsonValue (robotCode));
 }
 
 /**
@@ -360,7 +366,7 @@ void DSEventLogger::onRobotCodeChanged (bool robotCode)
 void DSEventLogger::onRadioCommunicationsChanged (bool connected)
 {
     LOG << "Radio communications set to" << connected;
-    m_radioCommsLog.append (qMakePair<qint64, bool> (currentTime(), connected));
+    logData (m_radioCommsLog, QJsonValue (connected));
 }
 
 /**
@@ -369,7 +375,7 @@ void DSEventLogger::onRadioCommunicationsChanged (bool connected)
 void DSEventLogger::onRobotCommunicationsChanged (bool connected)
 {
     LOG << "Robot communications set to" << connected;
-    m_robotCommsLog.append (qMakePair<qint64, bool> (currentTime(), connected));
+    logData (m_robotCommsLog, QJsonValue (connected));
 }
 
 /**
@@ -378,7 +384,7 @@ void DSEventLogger::onRobotCommunicationsChanged (bool connected)
 void DSEventLogger::onFMSCommunicationsChanged (bool connected)
 {
     LOG << "FMS communications set to" << connected;
-    m_fmsCommsLog.append (qMakePair<qint64, bool> (currentTime(), connected));
+    logData (m_fmsCommsLog, QJsonValue (connected));
 }
 
 /**
@@ -387,8 +393,7 @@ void DSEventLogger::onFMSCommunicationsChanged (bool connected)
 void DSEventLogger::onEmergencyStoppedChanged (bool emergencyStopped)
 {
     LOG << "ESTOP set to" << emergencyStopped;
-    m_emergencyStopLog.append (qMakePair<qint64, bool> (currentTime(),
-                               emergencyStopped));
+    logData (m_emergencyStopLog, QJsonValue (emergencyStopped));
 }
 
 /**
@@ -397,8 +402,7 @@ void DSEventLogger::onEmergencyStoppedChanged (bool emergencyStopped)
 void DSEventLogger::onControlModeChanged (DriverStation::Control mode)
 {
     LOG << "Robot control mode set to" << mode;
-    m_controlModeLog.append (qMakePair<qint64, int> (currentTime(),
-                                                     (int) mode));
+    logData (m_controlModeLog, QJsonValue ((int) mode));
 }
 
 /**
