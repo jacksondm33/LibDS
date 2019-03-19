@@ -77,7 +77,9 @@ private:
 private:
     bool m_init;
     FILE* m_dump;
+    FILE* m_json;
     QString m_currentLog;
+    QString m_currentJsonLog;
     QElapsedTimer m_timer;
 
     QJsonArray m_canUsageLog;

@@ -204,9 +204,18 @@ void DSEventLogger::init()
                        .arg (path)
                        .arg (GET_DATE_TIME ("HH_mm_ss AP"));
 
+        /* Get json file path */
+        m_currentJsonLog = QString ("%1/%2.json")
+                           .arg (path)
+                           .arg (GET_DATE_TIME ("HH_mm_ss AP"));
+
         /* Open dump file */
         m_dump = fopen (m_currentLog.toStdString().c_str(), "w");
         m_dump = !m_dump ? stderr : m_dump;
+
+        /* Open json file */
+        m_json = fopen (m_currentJsonLog.toStdString().c_str(), "w");
+        m_json = !m_json ? nullptr : m_json;
 
         /* Get OS information */
         QString sysV;
@@ -426,6 +435,25 @@ void DSEventLogger::onPositionChanged (DriverStation::Position position)
  */
 void DSEventLogger::saveData()
 {
+    QJsonObject logs = QJsonObject ({
+        qMakePair<QString, QJsonValue> ("can_usage", QJsonValue (m_canUsageLog)),
+        qMakePair<QString, QJsonValue> ("cpu_usage", QJsonValue (m_cpuUsageLog)),
+        qMakePair<QString, QJsonValue> ("ram_usage", QJsonValue (m_ramUsageLog)),
+        qMakePair<QString, QJsonValue> ("enabled", QJsonValue (m_enabledLog)),
+        qMakePair<QString, QJsonValue> ("disk_usage", QJsonValue (m_diskUsageLog)),
+        qMakePair<QString, QJsonValue> ("voltage", QJsonValue (m_voltageLog)),
+        qMakePair<QString, QJsonValue> ("robot_code", QJsonValue (m_robotCodeLog)),
+        qMakePair<QString, QJsonValue> ("radio_comms", QJsonValue (m_radioCommsLog)),
+        qMakePair<QString, QJsonValue> ("robot_comms", QJsonValue (m_robotCommsLog)),
+        qMakePair<QString, QJsonValue> ("fms_comms", QJsonValue (m_fmsCommsLog)),
+        qMakePair<QString, QJsonValue> ("control_mode", QJsonValue (m_controlModeLog)),
+        qMakePair<QString, QJsonValue> ("messages", QJsonValue (m_messagesLog)),
+        qMakePair<QString, QJsonValue> ("emergency_stop", QJsonValue (m_emergencyStopLog))
+    });
+    QJsonDocument logsDoc = QJsonDocument (logs);
+    freopen (m_currentJsonLog.toStdString().c_str(), "w", m_json);
+    m_json = !m_json ? nullptr : m_json;
+    fprintf (m_json, "%s\n", PRINT (logsDoc.toJson()));
 }
 
 /**
