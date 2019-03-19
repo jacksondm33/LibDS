@@ -39,36 +39,48 @@
 /*
  * Protocol bytes
  */
-static const uint8_t cTest               = 0x01;
-static const uint8_t cEnabled            = 0x04;
-static const uint8_t cAutonomous         = 0x02;
+/* Comm Version */
+static const uint8_t cCommVersion        = 0x01;
+static const uint8_t cFMS_CommVersion    = 0x00;
+/* Control / Status */
 static const uint8_t cTeleoperated       = 0x00;
-static const uint8_t cFMS_Attached       = 0x08;
+static const uint8_t cTest               = 0x01;
+static const uint8_t cAutonomous         = 0x02;
+static const uint8_t cEnabled            = 0x04;
 static const uint8_t cEmergencyStop      = 0x80;
+/* Robot Control */
+static const uint8_t cFMSConnected       = 0x08;
+/* Robot Status */
+static const uint8_t cRCodeStart         = 0x08;
+static const uint8_t cRBrownout          = 0x10;
+/* FMS Status */
+static const uint8_t cFMS_RobotPing      = 0x08;
+static const uint8_t cFMS_RadioPing      = 0x10;
+static const uint8_t cFMS_RobotComms     = 0x20;
+/* Request */
+static const uint8_t cRequestUnconnected = 0x00;
+static const uint8_t cRequestTime        = 0x01;
+static const uint8_t cRequestRestartCode = 0x04;
 static const uint8_t cRequestReboot      = 0x08;
 static const uint8_t cRequestNormal      = 0x80;
-static const uint8_t cRequestUnconnected = 0x00;
-static const uint8_t cRequestRestartCode = 0x04;
-static const uint8_t cFMS_RadioPing      = 0x10;
-static const uint8_t cFMS_RobotPing      = 0x08;
-static const uint8_t cFMS_RobotComms     = 0x20;
-static const uint8_t cFMS_DS_Version     = 0x00;
-static const uint8_t cTagDate            = 0x0f;
-static const uint8_t cTagGeneral         = 0x01;
-static const uint8_t cTagJoystick        = 0x0c;
-static const uint8_t cTagTimezone        = 0x10;
+/* Alliance */
 static const uint8_t cRed1               = 0x00;
 static const uint8_t cRed2               = 0x01;
 static const uint8_t cRed3               = 0x02;
 static const uint8_t cBlue1              = 0x03;
 static const uint8_t cBlue2              = 0x04;
 static const uint8_t cBlue3              = 0x05;
-static const uint8_t cRTagCANInfo        = 0x0e;
+/* Trace */
+static const uint8_t cRRobotHasCode      = 0x20;
+/* UDP Send Tags */
+static const uint8_t cTagJoystick        = 0x0c;
+static const uint8_t cTagDate            = 0x0f;
+static const uint8_t cTagTimezone        = 0x10;
+/* UDP Recv Tags */
+static const uint8_t cRTagDiskInfo       = 0x04;
 static const uint8_t cRTagCPUInfo        = 0x05;
 static const uint8_t cRTagRAMInfo        = 0x06;
-static const uint8_t cRTagDiskInfo       = 0x04;
-static const uint8_t cRequestTime        = 0x01;
-static const uint8_t cRobotHasCode       = 0x20;
+static const uint8_t cRTagCANInfo        = 0x0e;
 
 /*
  * Sent robot and FMS packet counters
@@ -132,7 +144,7 @@ static uint8_t get_control_code (void)
 
     /* Let the robot know if we are connected to the FMS */
     if (CFG_GetFMSCommunications())
-        code |= cFMS_Attached;
+        code |= cFMSConnected;
 
     /* Let the robot know if it should e-stop right now */
     if (CFG_GetEmergencyStopped())
@@ -497,7 +509,7 @@ static DS_String create_robot_udp_packet (void)
     DS_StrSetChar (&data, 1, (sent_robot_udp_packets));
 
     /* Add packet header */
-    DS_StrSetChar (&data, 2, cTagGeneral);
+    DS_StrSetChar (&data, 2, cCommVersion);
 
     /* Add control code, request flags and team station */
     DS_StrSetChar (&data, 3, get_control_code());
@@ -560,7 +572,7 @@ static DS_String create_fms_udp_packet (void)
     DS_StrSetChar (&data, 1, (sent_fms_udp_packets));
 
     /* Add DS version and FMS control code */
-    DS_StrSetChar (&data, 2, cFMS_DS_Version);
+    DS_StrSetChar (&data, 2, cFMS_CommVersion);
     DS_StrSetChar (&data, 3, fms_control_code());
 
     /* Add team number */
@@ -624,7 +636,7 @@ static int read_robot_udp_packet (const DS_String* data)
     uint8_t request = (uint8_t) DS_StrCharAt (data, 7);
 
     /* Update client information */
-    CFG_SetRobotCode (rstatus & cRobotHasCode);
+    CFG_SetRobotCode (rstatus & cRRobotHasCode);
     CFG_SetEmergencyStopped (control & cEmergencyStop);
 
     /* Update date/time request flag */
